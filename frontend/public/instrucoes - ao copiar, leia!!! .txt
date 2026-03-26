@@ -1,0 +1,1 @@
+os dados da landing page estao como do auth, por favor, altere tudo de acordo com o escopo do projto.

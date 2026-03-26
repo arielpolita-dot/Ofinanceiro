@@ -1,0 +1,140 @@
+/* ========================================
+   Responsive Overrides
+   ======================================== */
+
+@media (max-width: 1200px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm);
+  }
+
+  .page {
+    padding: var(--space-page-mobile);
+  }
+
+  .page-header {
+    flex-direction: column;
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+
+  .page-header h1 {
+    font-size: var(--font-size-xl);
+  }
+
+  .page-header p {
+    font-size: var(--font-size-sm);
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .data-table {
+    font-size: var(--font-size-xs);
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .data-table th {
+    font-size: var(--font-size-3xs);
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: var(--space-page-mobile);
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-sm);
+  }
+
+  .page-header h1 {
+    font-size: var(--font-size-lg);
+  }
+}
+
+/* ========================================
+   Mobile Utility Classes
+   ======================================== */
+
+/* Hide on mobile (< 768px) */
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+/* Hide on tablet (< 1024px) */
+@media (max-width: 1024px) {
+  .hide-tablet {
+    display: none !important;
+  }
+}
+
+/* Show only on mobile */
+.show-mobile-only {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .show-mobile-only {
+    display: block !important;
+  }
+
+  .show-mobile-only.flex {
+    display: flex !important;
+  }
+
+  .show-mobile-only.inline-flex {
+    display: inline-flex !important;
+  }
+}
+
+/* Full width on mobile */
+@media (max-width: 768px) {
+  .full-width-mobile {
+    width: 100% !important;
+  }
+}
+
+/* Stack flex items on mobile */
+@media (max-width: 768px) {
+  .stack-mobile {
+    flex-direction: column !important;
+  }
+
+  .stack-mobile > * {
+    width: 100%;
+  }
+}
+
+/* Responsive text */
+@media (max-width: 768px) {
+  .text-center-mobile {
+    text-align: center !important;
+  }
+}
+
+/* Touch-friendly spacing on mobile */
+@media (max-width: 768px) {
+  .gap-touch {
+    gap: var(--space-md) !important;
+  }
+}

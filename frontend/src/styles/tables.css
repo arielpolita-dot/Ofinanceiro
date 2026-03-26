@@ -1,0 +1,56 @@
+/* ========================================
+   Legacy Table Styles (for data-table class)
+   ======================================== */
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.data-table th,
+.data-table td {
+  text-align: left;
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.data-table th {
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+}
+
+.data-table td {
+  color: var(--text-primary);
+}
+
+.data-table tbody tr:hover {
+  background: var(--bg-secondary);
+}
+
+/* Column utilities */
+.data-table .col-compact,
+.data-table .col-status,
+.data-table .col-actions,
+.data-table .col-date {
+  width: 1%;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.data-table .col-status {
+  min-width: 60px;
+  max-width: 90px;
+}
+
+.data-table .col-actions {
+  text-align: right;
+}
+
+.data-table .col-date {
+  min-width: 70px;
+}

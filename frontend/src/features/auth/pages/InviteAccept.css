@@ -1,0 +1,48 @@
+.invite-accept-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--space-lg);
+  background: var(--bg-secondary);
+}
+
+.invite-accept-page > * {
+  width: 100%;
+  max-width: 480px;
+}
+
+.invite-accept-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+  padding: var(--space-xl);
+  text-align: center;
+}
+
+.invite-accept-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.invite-accept-text {
+  font-size: var(--font-size-md);
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.invite-accept-expired {
+  font-size: var(--font-size-md);
+  color: var(--color-warning);
+  margin: 0;
+}
+
+.invite-accept-error {
+  font-size: var(--font-size-md);
+  color: var(--color-error);
+  margin: 0;
+}

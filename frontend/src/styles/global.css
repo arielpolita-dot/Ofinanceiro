@@ -1,0 +1,11 @@
+/* ========================================
+   Global Styles - Imports all modules
+   Design System variables are in /design-system/styles/variables.css
+   ======================================== */
+
+@import './base.css';
+@import './layout.css';
+@import './tables.css';
+@import './auth.css';
+@import './utilities.css';
+@import './responsive.css';

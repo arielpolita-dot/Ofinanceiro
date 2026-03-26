@@ -1,0 +1,57 @@
+name: Publish SDK
+
+on:
+  push:
+    tags:
+      - 'sdk-v*'
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install and Build
+        run: |
+          cd sdk
+          npm ci
+          npm run build
+
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd sdk
+          npm publish --access public
+
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Upload to S3 CDN
+        env:
+          S3_BUCKET: ${{ secrets.SDK_S3_BUCKET }}
+        run: |
+          cd sdk
+          aws s3 sync dist/ s3://$S3_BUCKET/ --delete
+
+      - name: Summary
+        run: |
+          echo "## SDK Published" >> $GITHUB_STEP_SUMMARY
+          echo "- npm: Published to registry" >> $GITHUB_STEP_SUMMARY
+          echo "- CDN: Uploaded to S3" >> $GITHUB_STEP_SUMMARY

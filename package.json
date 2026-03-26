@@ -1,0 +1,21 @@
+{
+  "name": "app-template",
+  "version": "1.0.0",
+  "description": "Template for SaaS applications",
+  "private": true,
+  "scripts": {
+    "start": "concurrently -n \"backend,frontend\" -c \"bgBlue,bgGreen\" \"npm run start:backend\" \"sleep 3 && npm run start:frontend\"",
+    "start:backend": "cd backend && npm run start:local",
+    "start:frontend": "cd frontend && npm run dev",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

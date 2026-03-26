@@ -1,0 +1,60 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGradient)"/>
+
+  <!-- Decorative elements -->
+  <circle cx="100" cy="100" r="200" fill="#0f172a" opacity="0.1"/>
+  <circle cx="1100" cy="530" r="250" fill="#10B981" opacity="0.1"/>
+
+  <!-- Logo -->
+  <circle cx="100" cy="315" r="40" fill="#0f172a"/>
+  <path d="M100 285C88 285 78 295 78 307V323C78 335 88 345 100 345C112 345 122 335 122 323V307C122 295 112 285 100 285ZM100 295C106 295 112 301 112 307V312H88V307C88 301 94 295 100 295Z" fill="white"/>
+  <circle cx="100" cy="328" r="6" fill="white"/>
+
+  <!-- Main Text -->
+  <text x="180" y="280" font-family="Inter, sans-serif" font-size="72" font-weight="800" fill="#111827">Authify</text>
+  <text x="180" y="360" font-family="Inter, sans-serif" font-size="36" fill="#6B7280">Autenticacao pronta para seu SaaS</text>
+  <text x="180" y="410" font-family="Inter, sans-serif" font-size="36" fill="#6B7280">em 15 minutos</text>
+
+  <!-- Features -->
+  <rect x="180" y="460" width="200" height="40" rx="20" fill="#EEF2FF"/>
+  <text x="220" y="487" font-family="Inter, sans-serif" font-size="16" fill="#0f172a">SDK JavaScript</text>
+
+  <rect x="400" y="460" width="180" height="40" rx="20" fill="#ECFDF5"/>
+  <text x="440" y="487" font-family="Inter, sans-serif" font-size="16" fill="#10B981">OAuth pronto</text>
+
+  <rect x="600" y="460" width="200" height="40" rx="20" fill="#FEF3C7"/>
+  <text x="640" y="487" font-family="Inter, sans-serif" font-size="16" fill="#F59E0B">Dashboard</text>
+
+  <!-- URL -->
+  <text x="180" y="570" font-family="Inter, sans-serif" font-size="24" fill="#9CA3AF">authify.com.br</text>
+
+  <!-- Dashboard mockup (simplified) -->
+  <rect x="850" y="150" width="280" height="330" rx="16" fill="white" opacity="0.95"/>
+  <rect x="850" y="150" width="280" height="40" rx="16" fill="#0f172a"/>
+  <text x="880" y="177" font-family="Inter, sans-serif" font-size="14" font-weight="600" fill="white">Dashboard</text>
+
+  <rect x="870" y="210" width="110" height="50" rx="8" fill="#EEF2FF"/>
+  <text x="885" y="232" font-family="Inter, sans-serif" font-size="10" fill="#6B7280">Users</text>
+  <text x="885" y="252" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#0f172a">1,247</text>
+
+  <rect x="1000" y="210" width="110" height="50" rx="8" fill="#ECFDF5"/>
+  <text x="1015" y="232" font-family="Inter, sans-serif" font-size="10" fill="#6B7280">Sessions</text>
+  <text x="1015" y="252" font-family="Inter, sans-serif" font-size="18" font-weight="700" fill="#10B981">892</text>
+
+  <rect x="870" y="280" width="240" height="80" rx="8" fill="#F9FAFB"/>
+  <text x="885" y="305" font-family="Inter, sans-serif" font-size="10" font-weight="600" fill="#374151">Signups this week</text>
+  <rect x="885" y="320" width="20" height="25" rx="2" fill="#0f172a" opacity="0.5"/>
+  <rect x="915" y="310" width="20" height="35" rx="2" fill="#0f172a" opacity="0.6"/>
+  <rect x="945" y="300" width="20" height="45" rx="2" fill="#0f172a" opacity="0.7"/>
+  <rect x="975" y="305" width="20" height="40" rx="2" fill="#0f172a" opacity="0.8"/>
+  <rect x="1005" y="295" width="20" height="50" rx="2" fill="#0f172a" opacity="0.9"/>
+  <rect x="1035" y="285" width="20" height="60" rx="2" fill="#10B981"/>
+
+  <defs>
+    <linearGradient id="bgGradient" x1="0" y1="0" x2="1200" y2="630">
+      <stop offset="0%" stop-color="#EEF2FF"/>
+      <stop offset="100%" stop-color="#E0E7FF"/>
+    </linearGradient>
+  </defs>
+</svg>

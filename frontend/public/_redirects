@@ -1,0 +1,14 @@
+# REDIRECT /scan para /whatsapp (todas as campanhas apontam pra whatsapp agora)
+/scan              /whatsapp            302
+/scan/             /whatsapp            302
+/scan/*/result     /scan/result.html    200
+/scan/*/result/    /scan/result.html    200
+/scan/*/payment    /scan/payment.html   200
+/scan/*/payment/   /scan/payment.html   200
+
+# Trial result pages (dynamic trialId)
+/trial/*/result    /trial/result.html    200
+/trial/*/result/   /trial/result.html    200
+
+# SPA fallback for /app routes
+/app/*    /app.html    200

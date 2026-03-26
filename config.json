@@ -1,0 +1,19 @@
+{
+  "project": {
+    "name": "app-template",
+    "description": "{Preencher aqui}"
+  },
+  "aws": {
+    "region": "us-east-1",
+    "account_id": "{Preencher aqui}"
+  },
+  "backend": {
+    "port": "8000",
+    "health_path": "/health",
+    "production_url": "{Preencher aqui}"
+  },
+  "frontend": {
+    "port": "8001",
+    "url": "{Preencher aqui}"
+  }
+}

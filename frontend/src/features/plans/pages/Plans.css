@@ -1,0 +1,101 @@
+.plans-loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-xl);
+}
+
+.plans-subscription-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-lg);
+}
+
+.plans-subscription-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.plans-subscription-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-lg);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.plans-subscription-name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xs);
+}
+
+.plans-subscription-name {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+}
+
+.plans-subscription-detail {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.plans-subscription-right {
+  text-align: right;
+}
+
+.plans-subscription-due-label {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.plans-subscription-due-date {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.plans-cancel-badge {
+  margin-top: var(--space-xs);
+}
+
+.plans-empty {
+  text-align: center;
+  padding: var(--space-xl);
+  color: var(--text-muted);
+}
+
+.plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-lg);
+}
+
+.plans-faq-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-lg);
+}
+
+.plans-faq-title {
+  margin-bottom: var(--space-sm);
+  color: var(--text-primary);
+}
+
+.plans-faq-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.plans-section-gap {
+  margin-bottom: var(--space-lg);
+}
+
+.plans-section-gap-top {
+  margin-top: var(--space-lg);
+}

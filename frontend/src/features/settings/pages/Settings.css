@@ -1,0 +1,34 @@
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg);
+}
+
+.settings-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.settings-row-label {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.settings-row-desc {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.settings-section-gap {
+  margin-top: var(--space-lg);
+}
+
+@media (max-width: 768px) {
+  .settings-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-md);
+  }
+}

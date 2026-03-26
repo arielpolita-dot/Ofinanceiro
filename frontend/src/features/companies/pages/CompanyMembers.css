@@ -1,0 +1,110 @@
+.members-loading,
+.members-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl);
+  color: var(--text-muted);
+}
+
+.members-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.members-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.members-row:last-child {
+  border-bottom: none;
+}
+
+.members-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+  flex: 1;
+}
+
+.members-row-name {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.members-row-email {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.members-row-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}
+
+.members-invite-form {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.members-invite-form > * {
+  flex: 1;
+  min-width: 160px;
+}
+
+.members-invite-form > button {
+  flex: 0;
+  min-width: auto;
+}
+
+.members-section-gap {
+  margin-top: var(--space-lg);
+}
+
+.members-invite-message {
+  font-size: var(--font-size-sm);
+  color: var(--color-success);
+  align-self: center;
+}
+
+.members-row-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-size-sm);
+}
+
+.members-row-role {
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+@media (max-width: 768px) {
+  .members-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-md);
+  }
+
+  .members-row-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .members-invite-form {
+    flex-direction: column;
+  }
+
+  .members-invite-form > * {
+    min-width: unset;
+  }
+}
