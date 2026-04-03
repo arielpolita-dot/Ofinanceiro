@@ -1,0 +1,58 @@
+# =============================================================================
+# Prometheus Scrape Configuration
+# =============================================================================
+# Targets are configured for the observability network.
+# The NestJS app target is set via APP_METRICS_TARGET env var in Coolify.
+#
+# If the NestJS app runs in a separate Coolify service, ensure both services
+# share a Docker network (add the "observability" network to the app service).
+# =============================================================================
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+scrape_configs:
+  # ---------------------------------------------------------------------------
+  # Prometheus self-monitoring
+  # ---------------------------------------------------------------------------
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+        labels:
+          service: "prometheus"
+
+  # ---------------------------------------------------------------------------
+  # NestJS Backend /metrics (prom-client)
+  # ---------------------------------------------------------------------------
+  # Set APP_METRICS_TARGET in Coolify env vars.
+  # Example: APP_METRICS_TARGET=my-nestjs-app:3000
+  # The app must expose /metrics endpoint (use @willsoto/nestjs-prometheus or prom-client).
+  # ---------------------------------------------------------------------------
+  - job_name: "nestjs-app"
+    metrics_path: "/metrics"
+    scrape_interval: 10s
+    static_configs:
+      - targets: ["${APP_METRICS_TARGET:-app:3000}"]
+        labels:
+          service: "nestjs-backend"
+
+  # ---------------------------------------------------------------------------
+  # Node Exporter (optional - install on host or as sidecar)
+  # ---------------------------------------------------------------------------
+  # Uncomment if you add node-exporter to this compose or run it on the host.
+  # - job_name: "node-exporter"
+  #   static_configs:
+  #     - targets: ["node-exporter:9100"]
+  #       labels:
+  #         service: "node-exporter"
+
+  # ---------------------------------------------------------------------------
+  # Loki metrics (internal health)
+  # ---------------------------------------------------------------------------
+  - job_name: "loki"
+    static_configs:
+      - targets: ["loki:3100"]
+        labels:
+          service: "loki"

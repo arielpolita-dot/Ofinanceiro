@@ -29,7 +29,7 @@ describe('LogoutButton', () => {
 
 describe('SidebarUserSection', () => {
   it('renders children', () => {
-    render(<Wrapper><SidebarUserSection><span>User</span></SidebarUserSection></Wrapper>)
+    render(<Wrapper><SidebarUserSection name="Test"><span>User</span></SidebarUserSection></Wrapper>)
     expect(screen.getByText('User')).toBeInTheDocument()
   })
 })

@@ -1,12 +1,12 @@
 import { render, screen, fireEvent, act } from '@testing-library/react'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { ToastProvider, useToast } from './Toast'
 
 const TestConsumer = () => {
   const { addToast, toasts } = useToast()
   return (
     <div>
-      <button onClick={() => addToast({ message: 'Hello', type: 'success' })}>Add</button>
+      <button onClick={() => addToast({ message: 'Hello', variant: 'success' })}>Add</button>
       <span data-testid="count">{toasts.length}</span>
     </div>
   )

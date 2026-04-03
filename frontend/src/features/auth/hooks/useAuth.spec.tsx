@@ -1,12 +1,10 @@
-import { render, screen, waitFor, act } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockFetch = vi.fn()
 global.fetch = mockFetch as any
 
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }))
-
-const STORAGE_PREFIX = 'app-template'
 
 describe('useAuth', () => {
   beforeEach(() => {

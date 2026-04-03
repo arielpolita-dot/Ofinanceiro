@@ -143,7 +143,7 @@ describe('EncryptionService', () => {
     it('should decrypt legacy CBC format (2-part iv:ciphertext)', () => {
       // Manually encrypt with CBC to test the legacy path
       const crypto = require('crypto');
-      const salt = crypto.createHash('sha256').update('app-template-key-salt-v1').digest();
+      const salt = crypto.createHash('sha256').update('ofinanceiro-key-salt-v1').digest();
       const key = crypto.scryptSync('test-encryption-key-2024', salt, 32);
       const iv = crypto.randomBytes(16);
       const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);

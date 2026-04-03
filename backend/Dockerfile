@@ -1,22 +1,23 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --include=dev
 
 COPY . .
+
+ENV NODE_ENV=production
 RUN npm run build
 
 # Production stage
-FROM node:20-alpine AS production
+FROM node:22-alpine AS production
 
 WORKDIR /app
 
-# Install fonts for PDFKit and curl for healthcheck (permanent)
-# Build tools are installed temporarily and removed after bcrypt compilation
-RUN apk add --no-cache fontconfig ttf-dejavu curl
+# Install tini (PID 1 for graceful shutdown), fonts for PDFKit, and curl for healthcheck
+RUN apk add --no-cache tini fontconfig ttf-dejavu curl
 
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nestjs -u 1001
@@ -37,6 +38,7 @@ RUN apk add --no-cache --virtual .build-deps python3 make g++ && \
 USER nestjs
 
 # Force IPv4 DNS resolution to avoid IPv6 connectivity issues with some cloud providers
+ENV NODE_ENV=production
 ENV NODE_OPTIONS="--dns-result-order=ipv4first"
 
 EXPOSE 8000
@@ -44,4 +46,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD curl -f http://localhost:8000/health || exit 1
 
+ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "dist/main"]

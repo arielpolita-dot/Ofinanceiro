@@ -1,22 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
+import { getModelToken } from '@nestjs/mongoose';
 import { AnalyticsService, TrackEventDto } from '../analytics.service';
-import { AnalyticsEvent } from '../../../database/entities/analytics-event.entity';
+import { AnalyticsEvent } from '../../../database/schemas';
 
-const mockQueryBuilder = {
-  select: jest.fn().mockReturnThis(),
-  addSelect: jest.fn().mockReturnThis(),
-  where: jest.fn().mockReturnThis(),
-  andWhere: jest.fn().mockReturnThis(),
-  groupBy: jest.fn().mockReturnThis(),
-  getRawMany: jest.fn(),
-};
-
-const mockRepository = {
+const mockModel = {
   create: jest.fn(),
-  save: jest.fn(),
-  find: jest.fn(),
-  createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
+  insertMany: jest.fn(),
+  find: jest.fn().mockReturnValue({
+    sort: jest.fn().mockReturnValue({ exec: jest.fn() }),
+  }),
+  aggregate: jest.fn(),
 };
 
 describe('AnalyticsService', () => {
@@ -26,15 +19,17 @@ describe('AnalyticsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AnalyticsService,
-        {
-          provide: getRepositoryToken(AnalyticsEvent, 'audit'),
-          useValue: mockRepository,
-        },
+        { provide: getModelToken(AnalyticsEvent.name), useValue: mockModel },
       ],
     }).compile();
 
     service = module.get<AnalyticsService>(AnalyticsService);
     jest.clearAllMocks();
+
+    // Re-setup chained mocks after clearAllMocks
+    mockModel.find.mockReturnValue({
+      sort: jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue([]) }),
+    });
   });
 
   describe('track', () => {
@@ -43,14 +38,13 @@ describe('AnalyticsService', () => {
       eventName: 'page_view',
     };
 
-    it('should create and save an analytics event', async () => {
-      const entity = { id: 'evt-1', ...baseDto };
-      mockRepository.create.mockReturnValue(entity);
-      mockRepository.save.mockResolvedValue(entity);
+    it('should create an analytics event', async () => {
+      const doc = { _id: 'evt-1', ...baseDto };
+      mockModel.create.mockResolvedValue(doc);
 
       const result = await service.track(baseDto, '1.2.3.4', 'Mozilla/5.0');
 
-      expect(mockRepository.create).toHaveBeenCalledWith(
+      expect(mockModel.create).toHaveBeenCalledWith(
         expect.objectContaining({
           sessionId: 'sess-1',
           eventName: 'page_view',
@@ -58,29 +52,21 @@ describe('AnalyticsService', () => {
           userAgent: 'Mozilla/5.0',
         }),
       );
-      expect(mockRepository.save).toHaveBeenCalledWith(entity);
-      expect(result).toEqual(entity);
+      expect(result).toEqual(doc);
     });
 
-    it('should set null for optional fields not provided', async () => {
-      const entity = { id: 'evt-2' };
-      mockRepository.create.mockReturnValue(entity);
-      mockRepository.save.mockResolvedValue(entity);
+    it('should set undefined for optional fields not provided', async () => {
+      mockModel.create.mockResolvedValue({ _id: 'evt-2' });
 
       await service.track(baseDto);
 
-      expect(mockRepository.create).toHaveBeenCalledWith(
+      expect(mockModel.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          visitorId: null,
-          eventData: null,
-          page: null,
-          referrer: null,
-          hostname: null,
-          scanId: null,
-          funnelVariant: null,
-          utmSource: null,
-          ipAddress: null,
-          userAgent: null,
+          visitorId: undefined,
+          eventData: undefined,
+          page: undefined,
+          referrer: undefined,
+          hostname: undefined,
         }),
       );
     });
@@ -91,13 +77,11 @@ describe('AnalyticsService', () => {
         eventName: 'scan_complete',
         eventData: { scan_id: 'scan-from-data' },
       };
-      const entity = { id: 'evt-3' };
-      mockRepository.create.mockReturnValue(entity);
-      mockRepository.save.mockResolvedValue(entity);
+      mockModel.create.mockResolvedValue({ _id: 'evt-3' });
 
       await service.track(dto);
 
-      expect(mockRepository.create).toHaveBeenCalledWith(
+      expect(mockModel.create).toHaveBeenCalledWith(
         expect.objectContaining({ scanId: 'scan-from-data' }),
       );
     });
@@ -109,13 +93,11 @@ describe('AnalyticsService', () => {
         scanId: 'direct-scan',
         eventData: { scan_id: 'data-scan' },
       };
-      const entity = { id: 'evt-4' };
-      mockRepository.create.mockReturnValue(entity);
-      mockRepository.save.mockResolvedValue(entity);
+      mockModel.create.mockResolvedValue({ _id: 'evt-4' });
 
       await service.track(dto);
 
-      expect(mockRepository.create).toHaveBeenCalledWith(
+      expect(mockModel.create).toHaveBeenCalledWith(
         expect.objectContaining({ scanId: 'direct-scan' }),
       );
     });
@@ -126,21 +108,17 @@ describe('AnalyticsService', () => {
         eventName: 'funnel_step',
         eventData: { funnel_variant: 'video' },
       };
-      const entity = { id: 'evt-5' };
-      mockRepository.create.mockReturnValue(entity);
-      mockRepository.save.mockResolvedValue(entity);
+      mockModel.create.mockResolvedValue({ _id: 'evt-5' });
 
       await service.track(dto);
 
-      expect(mockRepository.create).toHaveBeenCalledWith(
+      expect(mockModel.create).toHaveBeenCalledWith(
         expect.objectContaining({ funnelVariant: 'video' }),
       );
     });
 
-    it('should propagate and rethrow errors from save', async () => {
-      mockRepository.create.mockReturnValue({});
-      mockRepository.save.mockRejectedValue(new Error('DB write failed'));
-
+    it('should propagate and rethrow errors', async () => {
+      mockModel.create.mockRejectedValue(new Error('DB write failed'));
       await expect(service.track(baseDto)).rejects.toThrow('DB write failed');
     });
 
@@ -154,13 +132,11 @@ describe('AnalyticsService', () => {
         utmContent: 'banner',
         utmTerm: 'audit',
       };
-      const entity = { id: 'evt-6' };
-      mockRepository.create.mockReturnValue(entity);
-      mockRepository.save.mockResolvedValue(entity);
+      mockModel.create.mockResolvedValue({ _id: 'evt-6' });
 
       await service.track(dto);
 
-      expect(mockRepository.create).toHaveBeenCalledWith(
+      expect(mockModel.create).toHaveBeenCalledWith(
         expect.objectContaining({
           utmSource: 'google',
           utmMedium: 'cpc',
@@ -173,107 +149,87 @@ describe('AnalyticsService', () => {
   });
 
   describe('trackBatch', () => {
-    it('should create and save multiple events', async () => {
+    it('should insert multiple events', async () => {
       const events: TrackEventDto[] = [
         { sessionId: 's1', eventName: 'ev1' },
         { sessionId: 's2', eventName: 'ev2' },
       ];
-      const entities = [{ id: '1' }, { id: '2' }];
-      mockRepository.create
-        .mockReturnValueOnce(entities[0])
-        .mockReturnValueOnce(entities[1]);
-      mockRepository.save.mockResolvedValue(entities);
+      const docs = [{ _id: '1' }, { _id: '2' }];
+      mockModel.insertMany.mockResolvedValue(docs);
 
       const result = await service.trackBatch(events, '1.1.1.1', 'Agent');
 
-      expect(mockRepository.create).toHaveBeenCalledTimes(2);
-      expect(mockRepository.save).toHaveBeenCalledWith(entities);
-      expect(result).toEqual(entities);
+      expect(mockModel.insertMany).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ sessionId: 's1', eventName: 'ev1' }),
+          expect.objectContaining({ sessionId: 's2', eventName: 'ev2' }),
+        ]),
+      );
+      expect(result).toEqual(docs);
     });
 
     it('should handle empty batch', async () => {
-      mockRepository.save.mockResolvedValue([]);
-
+      mockModel.insertMany.mockResolvedValue([]);
       const result = await service.trackBatch([]);
-
-      expect(mockRepository.create).not.toHaveBeenCalled();
       expect(result).toEqual([]);
-    });
-
-    it('should set null for optional ipAddress and userAgent (lines 106-107)', async () => {
-      const events: TrackEventDto[] = [{ sessionId: 's1', eventName: 'ev1' }];
-      const entity = { id: '1' };
-      mockRepository.create.mockReturnValue(entity);
-      mockRepository.save.mockResolvedValue([entity]);
-
-      await service.trackBatch(events);
-
-      expect(mockRepository.create).toHaveBeenCalledWith(
-        expect.objectContaining({ userAgent: null, ipAddress: null }),
-      );
     });
   });
 
   describe('getEventsBySession', () => {
-    it('should find events ordered by createdAt ASC', async () => {
-      const events = [{ id: '1' }, { id: '2' }];
-      mockRepository.find.mockResolvedValue(events);
+    it('should find events sorted by created_at ASC', async () => {
+      const events = [{ _id: '1' }, { _id: '2' }];
+      const execMock = jest.fn().mockResolvedValue(events);
+      const sortMock = jest.fn().mockReturnValue({ exec: execMock });
+      mockModel.find.mockReturnValue({ sort: sortMock });
 
       const result = await service.getEventsBySession('sess-123');
 
-      expect(mockRepository.find).toHaveBeenCalledWith({
-        where: { sessionId: 'sess-123' },
-        order: { createdAt: 'ASC' },
-      });
+      expect(mockModel.find).toHaveBeenCalledWith({ sessionId: 'sess-123' });
+      expect(sortMock).toHaveBeenCalledWith({ created_at: 1 });
       expect(result).toEqual(events);
     });
   });
 
   describe('getEventsByScan', () => {
-    it('should find events by scanId ordered ASC', async () => {
-      const events = [{ id: '1' }];
-      mockRepository.find.mockResolvedValue(events);
+    it('should find events by scanId sorted ASC', async () => {
+      const events = [{ _id: '1' }];
+      const execMock = jest.fn().mockResolvedValue(events);
+      const sortMock = jest.fn().mockReturnValue({ exec: execMock });
+      mockModel.find.mockReturnValue({ sort: sortMock });
 
       const result = await service.getEventsByScan('scan-456');
 
-      expect(mockRepository.find).toHaveBeenCalledWith({
-        where: { scanId: 'scan-456' },
-        order: { createdAt: 'ASC' },
-      });
+      expect(mockModel.find).toHaveBeenCalledWith({ scanId: 'scan-456' });
       expect(result).toEqual(events);
     });
   });
 
   describe('getFunnelStats', () => {
     it('should return aggregated funnel event counts', async () => {
-      const start = new Date('2024-01-01');
-      const end = new Date('2024-01-31');
-      mockQueryBuilder.getRawMany.mockResolvedValue([
-        { eventName: 'funnel_start', count: '100' },
-        { eventName: 'funnel_complete', count: '25' },
+      mockModel.aggregate.mockResolvedValue([
+        { _id: 'funnel_start', count: 100 },
+        { _id: 'funnel_complete', count: 25 },
       ]);
 
-      const result = await service.getFunnelStats(start, end);
+      const result = await service.getFunnelStats(
+        new Date('2024-01-01'),
+        new Date('2024-01-31'),
+      );
 
-      expect(result).toEqual({
-        funnel_start: 100,
-        funnel_complete: 25,
-      });
+      expect(result).toEqual({ funnel_start: 100, funnel_complete: 25 });
     });
 
     it('should return empty object when no funnel events', async () => {
-      mockQueryBuilder.getRawMany.mockResolvedValue([]);
-
+      mockModel.aggregate.mockResolvedValue([]);
       const result = await service.getFunnelStats(new Date(), new Date());
-
       expect(result).toEqual({});
     });
   });
 
   describe('getConversionStats', () => {
     it('should return aggregated conversion event counts', async () => {
-      mockQueryBuilder.getRawMany.mockResolvedValue([
-        { eventName: 'conversion_signup', count: '50' },
+      mockModel.aggregate.mockResolvedValue([
+        { _id: 'conversion_signup', count: 50 },
       ]);
 
       const result = await service.getConversionStats(
@@ -285,10 +241,8 @@ describe('AnalyticsService', () => {
     });
 
     it('should return empty object when no conversions', async () => {
-      mockQueryBuilder.getRawMany.mockResolvedValue([]);
-
+      mockModel.aggregate.mockResolvedValue([]);
       const result = await service.getConversionStats(new Date(), new Date());
-
       expect(result).toEqual({});
     });
   });

@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest'
 import { SidebarProvider, useSidebar } from './SidebarContext'
 import { Sidebar, SidebarHeader, SidebarFooter } from './SidebarLayout'
 import { SidebarNav, NavItem } from './SidebarNav'
-import { UserProfile, SidebarUserSection } from './SidebarUser'
+import { UserProfile } from './SidebarUser'
 import { MobileHeader } from './MobileHeader'
 
 const Wrapper = ({ children }: { children: React.ReactNode }) => (

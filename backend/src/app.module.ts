@@ -7,9 +7,11 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { DatabaseModule } from './database/database.module';
+import { MongodbModule } from './database/mongodb.module';
 import { HealthModule } from './health/health.module';
 import { LoggerModule } from './common/logger/logger.module';
 import { CommonModule } from './common/common.module';
+import { CacheModule } from './common/cache';
 import { AuthBffModule } from './modules/auth/auth-bff.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { CompanyModule } from './modules/company/company.module';
@@ -17,6 +19,7 @@ import { BillingModule } from './modules/billing/billing.module';
 import { ActivityLogModule } from './common/activity-log';
 import { AuditLoggerModule, AuditLoggerInterceptor } from './common/audit-logger';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { MetricsModule, MetricsInterceptor } from './metrics';
 
 @Module({
   imports: [
@@ -37,7 +40,9 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
       { name: 'long', ttl: 60000, limit: 100 },
     ]),
     DatabaseModule,
+    MongodbModule,
     LoggerModule,
+    CacheModule,
     AuditLoggerModule,
     AuthBffModule,
     CommonModule,
@@ -47,11 +52,13 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
     CompanyModule,
     BillingModule,
     AnalyticsModule,
+    MetricsModule,
   ],
   controllers: [AppController],
   providers: [
     { provide: APP_GUARD, useClass: CustomThrottlerGuard },
     { provide: APP_INTERCEPTOR, useClass: AuditLoggerInterceptor },
+    { provide: APP_INTERCEPTOR, useClass: MetricsInterceptor },
   ],
 })
 export class AppModule {}

@@ -9,7 +9,7 @@ vi.mock('firebase/analytics', () => ({
 }))
 
 describe('FirebaseAnalyticsProvider', () => {
-  const cfg = { apiKey: 'k', authDomain: 'd', projectId: 'p', storageBucket: 's', messagingSenderId: 'm', appId: 'a' }
+  const cfg = { apiKey: 'k', authDomain: 'd', projectId: 'p', storageBucket: 's', messagingSenderId: 'm', appId: 'a', measurementId: 'G-TEST' }
 
   it('init initializes firebase', async () => {
     const { FirebaseAnalyticsProvider } = await import('./firebase.provider')

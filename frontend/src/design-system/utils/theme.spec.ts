@@ -13,7 +13,7 @@ describe('createTheme', () => {
     expect(theme.colors).toBeDefined()
   })
   it('creates with overrides', () => {
-    const theme = createTheme({ isDark: true })
+    const theme = createTheme({ mode: 'dark' })
     expect(theme).toBeDefined()
   })
 })

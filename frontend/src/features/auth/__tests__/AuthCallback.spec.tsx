@@ -125,7 +125,7 @@ describe('AuthCallback', () => {
 
     await waitFor(() => {
       // STORAGE_PREFIX comes from import.meta.env; check both possible keys
-      const stored = localStorage.getItem('app_user') ?? localStorage.getItem('app-template_user')
+      const stored = localStorage.getItem('app_user') ?? localStorage.getItem('ofinanceiro_user')
       expect(stored).toBe(JSON.stringify(userData))
     })
   })

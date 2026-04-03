@@ -44,7 +44,7 @@ export class EncryptionService {
     if (!keyString) {
       throw new Error('ENCRYPTION_KEY not configured');
     }
-    const saltValue = this.configService.get<string>('ENCRYPTION_SALT') || 'app-template-key-salt-v1';
+    const saltValue = this.configService.get<string>('ENCRYPTION_SALT') || 'ofinanceiro-key-salt-v1';
     const salt = crypto.createHash('sha256').update(saltValue).digest();
     this.key = crypto.scryptSync(keyString, salt, 32);
   }

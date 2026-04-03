@@ -1,7 +1,7 @@
 {
-  "name": "app-template",
+  "name": "ofinanceiro",
   "version": "1.0.0",
-  "description": "Template for SaaS applications",
+  "description": "OFinanceiro - Sistema Financeiro Completo",
   "private": true,
   "scripts": {
     "start": "concurrently -n \"backend,frontend\" -c \"bgBlue,bgGreen\" \"npm run start:backend\" \"sleep 3 && npm run start:frontend\"",

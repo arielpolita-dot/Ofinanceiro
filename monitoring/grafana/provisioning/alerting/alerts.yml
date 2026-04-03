@@ -1,0 +1,189 @@
+# =============================================================================
+# Grafana Alerting Rules Provisioning
+# =============================================================================
+# Alerts are evaluated every 1 minute.
+# Notification channel must be configured in Grafana UI
+# (Telegram bot, Slack webhook, or email).
+# =============================================================================
+
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: infrastructure
+    folder: Alerts
+    interval: 1m
+    rules:
+      # -----------------------------------------------------------------------
+      # High Error Rate (5xx > 1% for 5 minutes)
+      # -----------------------------------------------------------------------
+      - uid: alert-error-rate
+        title: "High Error Rate (5xx > 1%)"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: prometheus
+            model:
+              expr: "sum(rate(http_requests_total{status_code=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m])) * 100"
+              intervalMs: 15000
+              maxDataPoints: 43200
+          - refId: C
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [1] }
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Error rate above 1% for 5 minutes"
+          description: "5xx error rate is {{ $value }}%"
+
+      # -----------------------------------------------------------------------
+      # High Response Time (p95 > 2s for 5 minutes)
+      # -----------------------------------------------------------------------
+      - uid: alert-high-latency
+        title: "High Response Time (p95 > 2s)"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: prometheus
+            model:
+              expr: "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))"
+              intervalMs: 15000
+              maxDataPoints: 43200
+          - refId: C
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [2] }
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API p95 latency above 2 seconds"
+          description: "p95 response time is {{ $value }}s"
+
+      # -----------------------------------------------------------------------
+      # High Memory Usage (RSS > 512MB)
+      # -----------------------------------------------------------------------
+      - uid: alert-high-memory
+        title: "High Memory Usage (RSS > 512MB)"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: prometheus
+            model:
+              expr: "process_resident_memory_bytes"
+              intervalMs: 15000
+              maxDataPoints: 43200
+          - refId: C
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [536870912] }
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "NestJS process using more than 512MB RSS"
+          description: "RSS memory is {{ humanize $value }}"
+
+      # -----------------------------------------------------------------------
+      # High Event Loop Lag (> 100ms)
+      # -----------------------------------------------------------------------
+      - uid: alert-event-loop-lag
+        title: "High Event Loop Lag (> 100ms)"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: prometheus
+            model:
+              expr: "nodejs_eventloop_lag_seconds"
+              intervalMs: 15000
+              maxDataPoints: 43200
+          - refId: C
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [0.1] }
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Node.js event loop lag exceeding 100ms"
+          description: "Event loop lag is {{ $value }}s"
+
+      # -----------------------------------------------------------------------
+      # NestJS Target Down (Prometheus scrape failing)
+      # -----------------------------------------------------------------------
+      - uid: alert-target-down
+        title: "NestJS Target Down"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: prometheus
+            model:
+              expr: "up{job=\"nestjs-app\"}"
+              intervalMs: 15000
+              maxDataPoints: 43200
+          - refId: C
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: lt, params: [1] }
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "NestJS backend is unreachable"
+          description: "Prometheus cannot scrape /metrics from NestJS"
+
+      # -----------------------------------------------------------------------
+      # High Error Log Volume (> 10 errors/min)
+      # -----------------------------------------------------------------------
+      - uid: alert-error-logs
+        title: "High Error Log Volume"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: loki
+            model:
+              expr: "sum(count_over_time({compose_service=~\".+\"} | json | level=`error` [1m]))"
+              intervalMs: 60000
+              maxDataPoints: 43200
+          - refId: C
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: { type: gt, params: [10] }
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "More than 10 error logs per minute"
+          description: "Error log volume: {{ $value }} errors/min"

@@ -1,16 +1,17 @@
 /**
- * AuditLoggerService - Registra ações do backend no banco centralizado.
- * NAO lança exceções - logging nunca deve quebrar a aplicação.
+ * AuditLoggerService - Registra acoes do backend no MongoDB.
+ * NAO lanca excecoes - logging nunca deve quebrar a aplicacao.
  */
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 import {
-  ProjectAuditLog,
+  AuditLog,
+  AuditLogDocument,
   AuditLogLevel,
   AuditLogEventType,
-} from '../../database/entities/project-audit-log.entity';
+} from '../../database/schemas';
 import { AuditLogParams, sanitizeObject, extractError } from './audit-logger.types';
 
 @Injectable()
@@ -18,52 +19,47 @@ export class AuditLoggerService {
   private readonly logger = new Logger(AuditLoggerService.name);
 
   constructor(
-    @InjectRepository(ProjectAuditLog, 'audit')
-    private readonly auditLogRepository: Repository<ProjectAuditLog>,
+    @InjectModel(AuditLog.name)
+    private readonly auditLogModel: Model<AuditLogDocument>,
   ) {}
 
-  /** Gera um novo request ID para correlacionar logs */
   generateRequestId(): string {
     return uuidv4();
   }
 
-  /** Registra um log de auditoria. Nunca lança exceção. */
-  async log(params: AuditLogParams): Promise<ProjectAuditLog | null> {
+  async log(params: AuditLogParams): Promise<AuditLogDocument | null> {
     try {
-      const sanitizedParams = params.params ? sanitizeObject(params.params) : null;
-      const sanitizedResult = params.result ? sanitizeObject(params.result) : null;
+      const sanitizedParams = params.params ? sanitizeObject(params.params) : undefined;
+      const sanitizedResult = params.result ? sanitizeObject(params.result) : undefined;
 
-      const log = this.auditLogRepository.create({
+      return await this.auditLogModel.create({
         level: params.level || AuditLogLevel.INFO,
         eventType: params.eventType,
-        requestId: params.requestId || null,
-        userId: params.userId || null,
-        userEmail: params.userEmail || null,
-        method: params.method || null,
-        path: params.path || null,
-        statusCode: params.statusCode || null,
-        service: params.service || null,
-        methodName: params.methodName || null,
-        message: params.message || null,
+        requestId: params.requestId ?? undefined,
+        userId: params.userId ?? undefined,
+        userEmail: params.userEmail ?? undefined,
+        method: params.method ?? undefined,
+        path: params.path ?? undefined,
+        statusCode: params.statusCode ?? undefined,
+        service: params.service ?? undefined,
+        methodName: params.methodName ?? undefined,
+        message: params.message ?? undefined,
         params: sanitizedParams,
         result: sanitizedResult,
-        errorMessage: params.errorMessage || null,
-        errorStack: params.errorStack?.substring(0, 5000) || null,
-        errorCode: params.errorCode || null,
-        durationMs: params.durationMs || null,
-        ipAddress: params.ipAddress || null,
-        userAgent: params.userAgent?.substring(0, 500) || null,
-        metadata: params.metadata || null,
+        errorMessage: params.errorMessage ?? undefined,
+        errorStack: params.errorStack?.substring(0, 5000),
+        errorCode: params.errorCode ?? undefined,
+        durationMs: params.durationMs ?? undefined,
+        ipAddress: params.ipAddress ?? undefined,
+        userAgent: params.userAgent?.substring(0, 500),
+        metadata: params.metadata ?? undefined,
       });
-
-      return await this.auditLogRepository.save(log);
     } catch (error) {
       this.logger.error(`Failed to save audit log: ${(error as Error).message}`, (error as Error).stack);
       return null;
     }
   }
 
-  /** Log de início de requisição HTTP */
   async logRequestStart(params: {
     requestId: string; method: string; path: string;
     userId?: string | null; userEmail?: string | null;
@@ -78,7 +74,6 @@ export class AuditLoggerService {
     });
   }
 
-  /** Log de fim de requisição HTTP (sucesso) */
   async logRequestEnd(params: {
     requestId: string; method: string; path: string;
     statusCode: number; durationMs: number;
@@ -92,7 +87,6 @@ export class AuditLoggerService {
     });
   }
 
-  /** Log de erro em requisição HTTP */
   async logRequestError(params: {
     requestId: string; method: string; path: string;
     statusCode: number; durationMs: number;
@@ -115,7 +109,6 @@ export class AuditLoggerService {
     });
   }
 
-  /** Log de início de método/service */
   async logMethodStart(params: {
     requestId?: string | null; service: string; methodName: string;
     userId?: string | null; params?: Record<string, unknown> | null;
@@ -128,7 +121,6 @@ export class AuditLoggerService {
     });
   }
 
-  /** Log de fim de método/service (sucesso) */
   async logMethodEnd(params: {
     requestId?: string | null; service: string; methodName: string;
     userId?: string | null; durationMs?: number;
@@ -142,7 +134,6 @@ export class AuditLoggerService {
     });
   }
 
-  /** Log de erro em método/service */
   async logMethodError(params: {
     requestId?: string | null; service: string; methodName: string;
     userId?: string | null; durationMs?: number;
@@ -166,7 +157,6 @@ export class AuditLoggerService {
     });
   }
 
-  /** Log de evento de autenticação */
   async logAuth(params: {
     eventType: AuditLogEventType.AUTH_LOGIN | AuditLogEventType.AUTH_LOGOUT
       | AuditLogEventType.AUTH_FAILED | AuditLogEventType.AUTH_TOKEN_REFRESH;
@@ -182,7 +172,6 @@ export class AuditLoggerService {
     });
   }
 
-  /** Log de evento de scan */
   async logScan(params: {
     eventType: AuditLogEventType.SCAN_START | AuditLogEventType.SCAN_PROGRESS
       | AuditLogEventType.SCAN_COMPLETE | AuditLogEventType.SCAN_ERROR;
@@ -205,7 +194,6 @@ export class AuditLoggerService {
     });
   }
 
-  /** Log de chamada externa (APIs, services) */
   async logExternalCall(params: {
     requestId?: string | null; service: string; endpoint: string;
     method?: string; durationMs?: number; statusCode?: number;
@@ -228,17 +216,14 @@ export class AuditLoggerService {
     });
   }
 
-  /** Log genérico de info */
   async info(message: string, metadata?: Record<string, unknown>, requestId?: string): Promise<void> {
     await this.log({ level: AuditLogLevel.INFO, eventType: AuditLogEventType.SYSTEM_INFO, requestId, message, metadata });
   }
 
-  /** Log genérico de warn */
   async warn(message: string, metadata?: Record<string, unknown>, requestId?: string): Promise<void> {
     await this.log({ level: AuditLogLevel.WARN, eventType: AuditLogEventType.SYSTEM_WARNING, requestId, message, metadata });
   }
 
-  /** Log genérico de error */
   async error(message: string, error?: Error | string, metadata?: Record<string, unknown>, requestId?: string): Promise<void> {
     const { errorMessage, errorStack } = extractError(error);
     await this.log({ level: AuditLogLevel.ERROR, eventType: AuditLogEventType.SYSTEM_ERROR, requestId, message, errorMessage, errorStack, metadata });

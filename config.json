@@ -1,19 +1,15 @@
 {
   "project": {
-    "name": "app-template",
-    "description": "{Preencher aqui}"
-  },
-  "aws": {
-    "region": "us-east-1",
-    "account_id": "{Preencher aqui}"
+    "name": "ofinanceiro",
+    "description": "OFinanceiro - Sistema Financeiro Completo"
   },
   "backend": {
     "port": "8000",
     "health_path": "/health",
-    "production_url": "{Preencher aqui}"
+    "production_url": "https://api-financeiro.oentregador.com.br"
   },
   "frontend": {
     "port": "8001",
-    "url": "{Preencher aqui}"
+    "url": "https://financeiro.oentregador.com.br"
   }
 }

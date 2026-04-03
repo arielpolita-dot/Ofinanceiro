@@ -1,16 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import {
-  AnalyticsEvent,
-  AnalyticsEventData,
-} from '../../database/entities/analytics-event.entity';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { AnalyticsEvent, AnalyticsEventDocument } from '../../database/schemas';
 
 export interface TrackEventDto {
   sessionId: string;
   visitorId?: string;
   eventName: string;
-  eventData?: AnalyticsEventData;
+  eventData?: Record<string, unknown>;
   page?: string;
   referrer?: string;
   hostname?: string;
@@ -31,48 +28,43 @@ export class AnalyticsService {
   private readonly logger = new Logger(AnalyticsService.name);
 
   constructor(
-    @InjectRepository(AnalyticsEvent, 'audit')
-    private readonly analyticsRepository: Repository<AnalyticsEvent>,
+    @InjectModel(AnalyticsEvent.name)
+    private readonly analyticsModel: Model<AnalyticsEventDocument>,
   ) {}
 
   async track(
     dto: TrackEventDto,
     ipAddress?: string,
     userAgent?: string,
-  ): Promise<AnalyticsEvent> {
+  ): Promise<AnalyticsEventDocument> {
     try {
-      const event = this.analyticsRepository.create({
+      const event = await this.analyticsModel.create({
         sessionId: dto.sessionId,
-        visitorId: dto.visitorId || null,
+        visitorId: dto.visitorId,
         eventName: dto.eventName,
-        eventData: dto.eventData || null,
-        page: dto.page || null,
-        referrer: dto.referrer || null,
-        hostname: dto.hostname || null,
-        scanId: dto.scanId || (dto.eventData?.scan_id as string) || null,
-        funnelVariant:
-          dto.funnelVariant ||
-          (dto.eventData?.funnel_variant as string) ||
-          null,
-        utmSource: dto.utmSource || null,
-        utmMedium: dto.utmMedium || null,
-        utmCampaign: dto.utmCampaign || null,
-        utmContent: dto.utmContent || null,
-        utmTerm: dto.utmTerm || null,
-        userAgent: userAgent || null,
-        ipAddress: ipAddress || null,
-        language: dto.language || null,
-        screenWidth: dto.screenWidth || null,
-        screenHeight: dto.screenHeight || null,
+        eventData: dto.eventData,
+        page: dto.page,
+        referrer: dto.referrer,
+        hostname: dto.hostname,
+        scanId: dto.scanId || (dto.eventData?.scan_id as string | undefined),
+        funnelVariant: dto.funnelVariant || (dto.eventData?.funnel_variant as string | undefined),
+        utmSource: dto.utmSource,
+        utmMedium: dto.utmMedium,
+        utmCampaign: dto.utmCampaign,
+        utmContent: dto.utmContent,
+        utmTerm: dto.utmTerm,
+        userAgent,
+        ipAddress,
+        language: dto.language,
+        screenWidth: dto.screenWidth,
+        screenHeight: dto.screenHeight,
       });
-
-      const saved = await this.analyticsRepository.save(event);
 
       this.logger.debug(
         `[Analytics] ${dto.eventName} | session=${dto.sessionId} | scan=${dto.scanId || 'n/a'}`,
       );
 
-      return saved as AnalyticsEvent;
+      return event;
     } catch (error) {
       this.logger.error(`Failed to track event: ${(error as Error).message}`, (error as Error).stack);
       throw error;
@@ -83,68 +75,63 @@ export class AnalyticsService {
     events: TrackEventDto[],
     ipAddress?: string,
     userAgent?: string,
-  ): Promise<AnalyticsEvent[]> {
-    const entities = events.map((dto) =>
-      this.analyticsRepository.create({
-        sessionId: dto.sessionId,
-        visitorId: dto.visitorId || null,
-        eventName: dto.eventName,
-        eventData: dto.eventData || null,
-        page: dto.page || null,
-        referrer: dto.referrer || null,
-        hostname: dto.hostname || null,
-        scanId: dto.scanId || (dto.eventData?.scan_id as string) || null,
-        funnelVariant:
-          dto.funnelVariant ||
-          (dto.eventData?.funnel_variant as string) ||
-          null,
-        utmSource: dto.utmSource || null,
-        utmMedium: dto.utmMedium || null,
-        utmCampaign: dto.utmCampaign || null,
-        utmContent: dto.utmContent || null,
-        utmTerm: dto.utmTerm || null,
-        userAgent: userAgent || null,
-        ipAddress: ipAddress || null,
-        language: dto.language || null,
-        screenWidth: dto.screenWidth || null,
-        screenHeight: dto.screenHeight || null,
-      }),
-    );
+  ): Promise<AnalyticsEventDocument[]> {
+    const docs = events.map((dto) => ({
+      sessionId: dto.sessionId,
+      visitorId: dto.visitorId,
+      eventName: dto.eventName,
+      eventData: dto.eventData,
+      page: dto.page,
+      referrer: dto.referrer,
+      hostname: dto.hostname,
+      scanId: dto.scanId || (dto.eventData?.scan_id as string | undefined),
+      funnelVariant: dto.funnelVariant || (dto.eventData?.funnel_variant as string | undefined),
+      utmSource: dto.utmSource,
+      utmMedium: dto.utmMedium,
+      utmCampaign: dto.utmCampaign,
+      utmContent: dto.utmContent,
+      utmTerm: dto.utmTerm,
+      userAgent,
+      ipAddress,
+      language: dto.language,
+      screenWidth: dto.screenWidth,
+      screenHeight: dto.screenHeight,
+    }));
 
-    return this.analyticsRepository.save(entities) as Promise<AnalyticsEvent[]>;
+    return this.analyticsModel.insertMany(docs) as Promise<AnalyticsEventDocument[]>;
   }
 
-  async getEventsBySession(sessionId: string): Promise<AnalyticsEvent[]> {
-    return this.analyticsRepository.find({
-      where: { sessionId },
-      order: { createdAt: 'ASC' },
-    });
+  async getEventsBySession(sessionId: string): Promise<AnalyticsEventDocument[]> {
+    return this.analyticsModel
+      .find({ sessionId })
+      .sort({ created_at: 1 })
+      .exec();
   }
 
-  async getEventsByScan(scanId: string): Promise<AnalyticsEvent[]> {
-    return this.analyticsRepository.find({
-      where: { scanId },
-      order: { createdAt: 'ASC' },
-    });
+  async getEventsByScan(scanId: string): Promise<AnalyticsEventDocument[]> {
+    return this.analyticsModel
+      .find({ scanId })
+      .sort({ created_at: 1 })
+      .exec();
   }
 
   async getFunnelStats(
     startDate: Date,
     endDate: Date,
   ): Promise<Record<string, number>> {
-    const result = await this.analyticsRepository
-      .createQueryBuilder('event')
-      .select('event.event_name', 'eventName')
-      .addSelect('COUNT(*)', 'count')
-      .where('event.created_at >= :startDate', { startDate })
-      .andWhere('event.created_at <= :endDate', { endDate })
-      .andWhere("event.event_name LIKE 'funnel_%'")
-      .groupBy('event.event_name')
-      .getRawMany();
+    const results = await this.analyticsModel.aggregate([
+      {
+        $match: {
+          created_at: { $gte: startDate, $lte: endDate },
+          eventName: { $regex: /^funnel_/ },
+        },
+      },
+      { $group: { _id: '$eventName', count: { $sum: 1 } } },
+    ]);
 
-    return result.reduce(
+    return results.reduce(
       (acc, row) => {
-        acc[row.eventName] = parseInt(row.count, 10);
+        acc[row._id] = row.count;
         return acc;
       },
       {} as Record<string, number>,
@@ -155,19 +142,19 @@ export class AnalyticsService {
     startDate: Date,
     endDate: Date,
   ): Promise<Record<string, number>> {
-    const result = await this.analyticsRepository
-      .createQueryBuilder('event')
-      .select('event.event_name', 'eventName')
-      .addSelect('COUNT(*)', 'count')
-      .where('event.created_at >= :startDate', { startDate })
-      .andWhere('event.created_at <= :endDate', { endDate })
-      .andWhere("event.event_name LIKE 'conversion_%'")
-      .groupBy('event.event_name')
-      .getRawMany();
+    const results = await this.analyticsModel.aggregate([
+      {
+        $match: {
+          created_at: { $gte: startDate, $lte: endDate },
+          eventName: { $regex: /^conversion_/ },
+        },
+      },
+      { $group: { _id: '$eventName', count: { $sum: 1 } } },
+    ]);
 
-    return result.reduce(
+    return results.reduce(
       (acc, row) => {
-        acc[row.eventName] = parseInt(row.count, 10);
+        acc[row._id] = row.count;
         return acc;
       },
       {} as Record<string, number>,

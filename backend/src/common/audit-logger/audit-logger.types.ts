@@ -1,7 +1,7 @@
 /**
  * Tipos e constantes do módulo de Audit Logger
  */
-import { AuditLogLevel, AuditLogEventType } from '../../database/entities/project-audit-log.entity';
+import { AuditLogLevel, AuditLogEventType } from '../../database/schemas';
 
 /** Parâmetros para criar um log de auditoria */
 export interface AuditLogParams {

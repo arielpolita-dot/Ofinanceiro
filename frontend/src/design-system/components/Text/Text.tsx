@@ -8,13 +8,13 @@ export interface TextProps {
   children: React.ReactNode
   className?: string
   style?: React.CSSProperties
-  as?: keyof JSX.IntrinsicElements
+  as?: React.ElementType
   color?: 'default' | 'muted' | 'primary' | 'success' | 'warning' | 'danger'
   weight?: 'normal' | 'medium' | 'semibold' | 'bold'
   align?: 'left' | 'center' | 'right'
 }
 
-const variantToTag: Record<TextVariant, keyof JSX.IntrinsicElements> = {
+const variantToTag: Record<TextVariant, React.ElementType> = {
   h1: 'h1',
   h2: 'h2',
   h3: 'h3',

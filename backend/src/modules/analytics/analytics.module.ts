@@ -1,11 +1,15 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { MongooseModule } from '@nestjs/mongoose';
 import { AnalyticsController } from './analytics.controller';
 import { AnalyticsService } from './analytics.service';
-import { AnalyticsEvent } from '../../database/entities/analytics-event.entity';
+import { AnalyticsEvent, AnalyticsEventSchema } from '../../database/schemas';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([AnalyticsEvent], 'audit')],
+  imports: [
+    MongooseModule.forFeature([
+      { name: AnalyticsEvent.name, schema: AnalyticsEventSchema },
+    ]),
+  ],
   controllers: [AnalyticsController],
   providers: [AnalyticsService],
   exports: [AnalyticsService],

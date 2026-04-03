@@ -14,7 +14,7 @@ async function bootstrap() {
 
   // API prefix
   app.setGlobalPrefix('api', {
-    exclude: ['health', 'api/docs'],
+    exclude: ['health', 'metrics', 'api/docs'],
   });
 
   app.use(cookieParser());
@@ -77,8 +77,8 @@ async function bootstrap() {
 
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
-      .setTitle('App Template API')
-      .setDescription('App Template - API Documentation')
+      .setTitle('OFinanceiro API')
+      .setDescription('OFinanceiro - API Documentation')
       .setVersion('1.0')
       .addBearerAuth(
         { type: 'http', scheme: 'bearer', bearerFormat: 'JWT', name: 'Authorization', description: 'Enter JWT token', in: 'header' },

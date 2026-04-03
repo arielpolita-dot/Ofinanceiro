@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projeto de Infraestrutura — Arquitetura do Sistema v1.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  --bg:   #080808;
+  --bg1:  #0d0d0d;
+  --bg2:  #111;
+  --bg3:  #161616;
+  --bg4:  #1a1a1a;
+  --b:    rgba(255,255,255,0.07);
+  --b2:   rgba(255,255,255,0.12);
+  --b3:   rgba(255,255,255,0.18);
+  --t:    #f5f5f5;
+  --t2:   #a0a0a0;
+  --t3:   #555;
+  --t4:   #333;
+  --acc:  #e8e8e8;
+  --acc2: #c0c0c0;
+  --mono: 'JetBrains Mono', monospace;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--t);
+  overflow-x: hidden;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* ─── NAV ─────────── */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 56px;
+  background: rgba(8,8,8,0.88); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--b);
+}
+.logo { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; color: var(--t); text-decoration: none; }
+.logo em { font-style: normal; color: var(--t2); }
+.nav-pills { display: flex; gap: 6px; }
+.nav-pill {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase;
+  padding: 4px 12px; border-radius: 999px; border: 1px solid var(--b2); color: var(--t3);
+}
+.nav-pill.live { border-color: rgba(255,255,255,0.2); color: var(--t2); }
+.nav-by { font-size: 11px; color: var(--t3); font-weight: 500; }
+.nav-by strong { color: var(--t2); font-weight: 700; }
+
+/* ─── WRAP ─────────── */
+.wrap { position: relative; z-index: 1; max-width: 1140px; margin: 0 auto; padding: 0 40px; }
+
+/* ─── HERO ─────────── */
+.hero { padding: 80px 0 56px; }
+.hero-eyebrow {
+  font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--t3); margin-bottom: 20px; display: flex; align-items: center; gap: 12px;
+}
+.hero-eyebrow::before { content:''; width: 32px; height: 1px; background: var(--b3); }
+.hero h1 { font-size: clamp(48px, 6.5vw, 82px); font-weight: 900; letter-spacing: -3px; line-height: 0.95; margin-bottom: 24px; }
+.hero h1 .dim { color: var(--t3); }
+.hero-desc { font-size: 14px; color: var(--t2); max-width: 600px; line-height: 1.7; margin-bottom: 36px; }
+.hero-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font-family: var(--mono); font-size: 11px; font-weight: 500; padding: 5px 12px; border-radius: 5px; border: 1px solid var(--b2); color: var(--t2); background: var(--bg3); }
+
+/* ─── SECTION ─────────── */
+.sec { padding: 72px 0; border-top: 1px solid var(--b); }
+.sec-header { margin-bottom: 40px; }
+.sec-num { font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--t4); letter-spacing: 1px; text-transform: uppercase; }
+.sec-title { font-size: 28px; font-weight: 800; letter-spacing: -0.8px; color: var(--t); margin-top: 6px; }
+.sec-sub { font-size: 13px; color: var(--t2); margin-top: 6px; max-width: 560px; line-height: 1.6; }
+
+/* ─── DIAGRAM ─────────── */
+.diagram-wrap { background: var(--bg1); border: 1px solid var(--b2); border-radius: 16px; overflow-x: auto; }
+.diagram-wrap .mermaid svg { min-width: 1400px; max-width: none; }
+.diagram-header { padding: 14px 24px; border-bottom: 1px solid var(--b); display: flex; align-items: center; gap: 10px; }
+.diagram-dot { width: 8px; height: 8px; border-radius: 50%; }
+.diagram-title { font-family: var(--mono); font-size: 11px; color: var(--t3); margin-left: 4px; }
+
+/* ─── GRIDS ─────────── */
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; align-items: stretch; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: stretch; }
+.grid-2 > .dcard, .grid-2 > .full-block, .grid-2 > .sec-items,
+.grid-3 > .dcard, .grid-3 > .mon-card { min-height: 0; }
+
+/* ─── CARDS ─────────── */
+.dcard { background: var(--bg2); border: 1px solid var(--b); border-radius: 12px; padding: 24px; transition: border-color 0.2s, background 0.2s; display: flex; flex-direction: column; }
+.dcard:hover { border-color: var(--b2); background: var(--bg3); }
+.dcard-label { font-family: var(--mono); font-size: 10px; font-weight: 600; color: var(--t3); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.dcard-label::before { content:''; width: 12px; height: 1px; background: var(--b3); }
+.dcard-title { font-size: 16px; font-weight: 700; color: var(--t); margin-bottom: 6px; letter-spacing: -0.3px; }
+.dcard-sub { font-size: 12px; color: var(--t2); margin-bottom: 16px; line-height: 1.6; flex: 1; }
+.dcard-divider { height: 1px; background: var(--b); margin: 16px 0; }
+
+/* ─── SPEC LIST ─────────── */
+.spec-list { display: flex; flex-direction: column; gap: 8px; }
+.spec-row { display: flex; align-items: flex-start; gap: 10px; font-size: 12px; }
+.spec-key { color: var(--t3); flex-shrink: 0; width: 120px; font-family: var(--mono); font-size: 11px; }
+.spec-val { color: var(--t2); }
+.spec-val strong { color: var(--t); font-weight: 600; }
+.spec-val a { color: var(--t2); text-decoration: underline; text-underline-offset: 3px; }
+
+/* ─── CHIPS ─────────── */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip-sm { font-family: var(--mono); font-size: 10px; font-weight: 500; padding: 3px 9px; border-radius: 4px; border: 1px solid var(--b); color: var(--t3); background: var(--bg3); }
+.chip-sm.hi { border-color: rgba(255,255,255,0.14); color: var(--t2); background: var(--bg4); }
+.chip-sm.chip-ok { border-color: rgba(34,197,94,0.3); color: #4ade80; background: rgba(34,197,94,0.08); }
+
+/* ─── PIPELINE ─────────── */
+.pipeline { display: flex; align-items: stretch; gap: 0; background: var(--bg2); border: 1px solid var(--b); border-radius: 12px; overflow: hidden; }
+.pipeline-step { flex: 1; padding: 20px 16px; border-right: 1px solid var(--b); display: flex; flex-direction: column; gap: 6px; transition: background 0.2s; position: relative; }
+.pipeline-step:last-child { border-right: none; }
+.pipeline-step:hover { background: var(--bg3); }
+.pipeline-step::after { content: '→'; position: absolute; right: -9px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--t4); z-index: 2; }
+.pipeline-step:last-child::after { display: none; }
+.p-num { font-family: var(--mono); font-size: 9px; font-weight: 700; color: var(--t4); letter-spacing: 1px; }
+.p-name { font-size: 12px; font-weight: 700; color: var(--t); }
+.p-desc { font-size: 11px; color: var(--t3); line-height: 1.5; }
+
+/* ─── TABLE ─────────── */
+.btable { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid var(--b); border-radius: 12px; overflow: hidden; }
+.btable th { padding: 12px 20px; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--t3); background: var(--bg3); border-bottom: 1px solid var(--b); text-align: left; font-family: var(--mono); }
+.btable td { padding: 14px 20px; font-size: 12px; color: var(--t2); border-bottom: 1px solid var(--b); vertical-align: middle; }
+.btable tr:last-child td { border-bottom: none; }
+.btable tr:hover td { background: rgba(255,255,255,0.015); }
+.btable .row-title { font-size: 13px; font-weight: 700; color: var(--t); }
+.btable .mono { font-family: var(--mono); font-size: 11px; }
+
+/* ─── FULL BLOCK ─────────── */
+.full-block { background: var(--bg2); border: 1px solid var(--b); border-radius: 12px; padding: 28px 32px; margin-bottom: 16px; display: flex; flex-direction: column; }
+.full-block-title { font-size: 15px; font-weight: 700; color: var(--t); margin-bottom: 4px; letter-spacing: -0.3px; }
+.full-block-sub { font-size: 12px; color: var(--t2); margin-bottom: 20px; }
+
+/* ─── SECURITY ITEMS ─────────── */
+.sec-items { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.sec-item { display: flex; align-items: flex-start; gap: 14px; padding: 14px 18px; background: var(--bg3); border: 1px solid var(--b); border-radius: 8px; transition: border-color 0.2s; flex: 1; }
+.sec-item:hover { border-color: var(--b2); }
+.sec-item-icon { width: 28px; height: 28px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.sec-item-body { flex: 1; }
+.sec-item-title { font-size: 12px; font-weight: 700; color: var(--t); margin-bottom: 2px; }
+.sec-item-desc { font-size: 11px; color: var(--t3); line-height: 1.5; }
+.sec-item-tags { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+
+/* ─── PILLAR ─────────── */
+.pillar-grid { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--b); border-radius: 12px; overflow: hidden; }
+.pillar { padding: 28px 22px; border-right: 1px solid var(--b); transition: background 0.2s; background: var(--bg2); display: flex; flex-direction: column; }
+.pillar:last-child { border-right: none; }
+.pillar:hover { background: var(--bg3); }
+.pillar-icon { font-size: 22px; margin-bottom: 14px; }
+.pillar-title { font-size: 14px; font-weight: 800; color: var(--t); margin-bottom: 8px; letter-spacing: -0.2px; }
+.pillar-items { display: flex; flex-direction: column; gap: 7px; margin-top: 14px; }
+.pillar-item { font-size: 11px; color: var(--t3); display: flex; align-items: flex-start; gap: 8px; line-height: 1.4; }
+.pillar-item::before { content: '—'; color: var(--t4); flex-shrink: 0; font-size: 10px; margin-top: 1px; }
+
+/* ─── MONITORING GRID ─────────── */
+.mon-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.mon-card { background: var(--bg2); border: 1px solid var(--b); border-radius: 10px; padding: 20px; transition: border-color 0.2s; display: flex; flex-direction: column; }
+.mon-card:hover { border-color: var(--b2); }
+.mon-icon { font-size: 18px; margin-bottom: 10px; }
+.mon-title { font-size: 13px; font-weight: 700; color: var(--t); margin-bottom: 4px; }
+.mon-desc { font-size: 11px; color: var(--t3); line-height: 1.5; flex: 1; }
+.mon-tags { margin-top: auto; padding-top: 10px; display: flex; gap: 4px; flex-wrap: wrap; }
+
+/* ─── CODE ─────────── */
+.code-block { background: var(--bg1); border: 1px solid var(--b); border-radius: 10px; padding: 18px 20px; font-family: var(--mono); font-size: 11px; color: var(--t2); line-height: 1.7; overflow-x: auto; white-space: pre; }
+.code-block .c { color: var(--t4); }
+.code-block .k { color: var(--acc2); font-weight: 600; }
+
+/* ─── PROMPT BOX ─────────── */
+.prompt-box {
+  background: var(--bg1); border: 1px solid var(--b2); border-left: 3px solid var(--t4);
+  border-radius: 8px; padding: 18px 20px; font-family: var(--mono); font-size: 11px;
+  color: var(--t3); line-height: 1.8; white-space: pre-wrap; margin-top: 16px;
+}
+.prompt-box-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--t4); margin-bottom: 10px; display: block;
+}
+
+/* ─── INFO BOX ─────────── */
+.info-box {
+  background: var(--bg3); border: 1px solid var(--b2); border-radius: 8px;
+  padding: 14px 18px; font-size: 12px; color: var(--t2); line-height: 1.6;
+  display: flex; gap: 12px; align-items: flex-start; margin-top: 12px;
+}
+.info-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
+/* ─── FOOTER ─────────── */
+footer { border-top: 1px solid var(--b); padding: 32px 56px; display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1; }
+.footer-brand { font-size: 14px; font-weight: 800; color: var(--t); }
+.footer-brand em { font-style: normal; color: var(--t3); }
+.footer-note { font-size: 11px; color: var(--t4); }
+
+/* ─── ANIM ─────────── */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.fade { animation: fadeUp 0.7s ease both; }
+.d1 { animation-delay: 0.1s; }
+.d2 { animation-delay: 0.2s; }
+
+@media (max-width: 900px) {
+  nav { padding: 16px 24px; }
+  nav .nav-pills { display: none; }
+  .wrap { padding: 0 20px; }
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .pillar-grid { grid-template-columns: repeat(2,1fr); }
+  .mon-grid { grid-template-columns: 1fr; }
+  .pipeline { flex-direction: column; }
+  .pipeline-step::after { display: none; }
+  footer { flex-direction: column; gap: 16px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="#">infra<em>Blueprint</em></a>
+  <div class="nav-pills">
+    <span class="nav-pill">Arquitetura Técnica</span>
+    <span class="nav-pill">Blueprint v1.0</span>
+    <span class="nav-pill live">Confidencial</span>
+  </div>
+  <div class="nav-by">Template por <strong>ohanax</strong></div>
+</nav>
+
+<!-- ── HERO ── -->
+<div class="wrap">
+<section class="hero fade">
+  <div class="hero-eyebrow">Documento técnico de arquitetura</div>
+  <h1><span class="dim">Projeto de</span><br>Infraestrutura</h1>
+  <p class="hero-desc">Blueprint completo da infraestrutura, stack de tecnologia, fluxo de dados e camadas de segurança da plataforma — do cliente ao banco de dados.</p>
+  <div class="hero-chips">
+    <span class="chip">NestJS · TypeScript</span>
+    <span class="chip">React 19 · Vite (×2 apps)</span>
+    <span class="chip">AWS Amplify</span>
+    <span class="chip">Authify — auth.ohanax.com</span>
+    <span class="chip">Billify — billing.ohanax.com</span>
+    <span class="chip">PostgreSQL 17</span>
+    <span class="chip">Docker · Coolify · Hetzner</span>
+    <span class="chip">GitHub Actions CI · Coolify Deploy</span>
+    <span class="chip">Cloudflare DNS</span>
+    <span class="chip">AWS S3</span>
+  </div>
+</section>
+</div>
+
+<!-- ── 01 · TOPOLOGIA ── -->
+<div class="wrap">
+<section class="sec fade d1">
+  <div class="sec-header">
+    <div class="sec-num">01 — Topologia geral</div>
+    <div class="sec-title">Visão Completa do Sistema</div>
+    <div class="sec-sub">Fluxo de dados do dispositivo do usuário até a persistência, com todas as camadas intermediárias.</div>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="diagram-header">
+      <div class="diagram-dot" style="background:#333"></div>
+      <div class="diagram-dot" style="background:#2a2a2a; margin-left:4px"></div>
+      <div class="diagram-dot" style="background:#222; margin-left:4px"></div>
+      <span class="diagram-title">projeto — architecture.topology</span>
+    </div>
+    <div style="padding: 32px; background: #0d0d0d;">
+      <style>
+        .topo { font-family: 'Inter', sans-serif; color: #e0e0e0; }
+        .topo-label { font-family: var(--mono); font-size: 11px; color: #555; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+        .topo-row { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+        .topo-box { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 16px 20px; min-width: 180px; max-width: 240px; flex: 1; }
+        .topo-box b { display: block; font-size: 15px; margin-bottom: 4px; color: #fff; }
+        .topo-box span { font-size: 13px; color: #999; line-height: 1.5; }
+        .topo-arrow { display: flex; justify-content: center; padding: 12px 0; }
+        .topo-arrow span { font-family: var(--mono); font-size: 13px; color: #555; }
+        .topo-section { border: 1px solid #222; border-radius: 16px; padding: 20px; margin-bottom: 0; background: #111; }
+        .topo-section-title { font-size: 14px; font-weight: 700; color: #ccc; margin-bottom: 16px; }
+      </style>
+
+      <div class="topo">
+
+        <!-- CAMADA 1: Clientes -->
+        <div class="topo-label">01 — Quem usa o sistema</div>
+        <div class="topo-row">
+          <div class="topo-box">
+            <b>Frontend App</b>
+            <span>React 19 · Vite · TypeScript<br/>Usuários da plataforma</span>
+          </div>
+          <div class="topo-box">
+            <b>Frontend Admin</b>
+            <span>React 19 · Vite · Custom DS<br/>Administradores</span>
+          </div>
+          <div class="topo-box">
+            <b>AWS Amplify</b>
+            <span>Hospeda ambos os frontends<br/>Push → deploy automático</span>
+          </div>
+        </div>
+
+        <div class="topo-arrow"><span>↓ requests da API</span></div>
+
+        <!-- CAMADA 2: Proteção -->
+        <div class="topo-label">02 — Proteção</div>
+        <div class="topo-row">
+          <div class="topo-box" style="max-width: 100%; flex: none; width: 100%;">
+            <b>Cloudflare</b>
+            <span>Toda request passa aqui antes do servidor · Bloqueia ataques · Esconde IP · HTTPS · Cache</span>
+          </div>
+        </div>
+
+        <div class="topo-arrow"><span>↓ request liberada</span></div>
+
+        <!-- CAMADA 3: Servidor -->
+        <div class="topo-label">03 — Servidor Hetzner</div>
+        <div class="topo-section">
+          <div class="topo-section-title">Containers Docker</div>
+          <div class="topo-row">
+            <div class="topo-box">
+              <b>Coolify</b>
+              <span>Gerenciador<br/>Deploy · SSL · Env vars<br/>Backups · Rollback</span>
+            </div>
+            <div class="topo-box">
+              <b>Traefik</b>
+              <span>Porteiro / Reverse Proxy<br/>Roteia requests<br/>SSL · Rate limit</span>
+            </div>
+            <div class="topo-box">
+              <b>NestJS 11 API</b>
+              <span>Cérebro do sistema<br/>Toda lógica de negócio<br/>:8000 · Swagger</span>
+            </div>
+            <div class="topo-box">
+              <b>Monitoramento</b>
+              <span>Grafana · Prometheus · Loki<br/>Dashboards · Alertas<br/>Uptime Kuma</span>
+            </div>
+          </div>
+
+          <div class="topo-arrow"><span>↓ leitura / escrita</span></div>
+
+          <div class="topo-section-title">Bancos de dados — rede interna</div>
+          <div class="topo-row">
+            <div class="topo-box">
+              <b>PostgreSQL 17</b>
+              <span>Dados de negócio<br/>Empresas · Membros · Sessões</span>
+            </div>
+            <div class="topo-box">
+              <b>MongoDB 7</b>
+              <span>Logs e Analytics<br/>analytics_events · audit_logs</span>
+            </div>
+            <div class="topo-box">
+              <b>Redis 7</b>
+              <span>Cache rápido<br/>Sessions · Queries</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="topo-arrow"><span>↓ chamadas externas (só o backend)</span></div>
+
+        <!-- CAMADA 4: Serviços externos -->
+        <div class="topo-label">04 — Serviços externos</div>
+        <div class="topo-row">
+          <div class="topo-box">
+            <b>Authify</b>
+            <span>auth.ohanax.com<br/>Login · OAuth · JWT<br/>httpOnly cookies</span>
+          </div>
+          <div class="topo-box">
+            <b>Billify</b>
+            <span>billing.ohanax.com<br/>Planos · Cobranças<br/>Stripe · PIX · Boleto</span>
+          </div>
+          <div class="topo-box">
+            <b>AWS S3 + CDN</b>
+            <span>Object Storage<br/>Arquivos · CloudFront<br/>URLs assinadas</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="text-align:center; padding:20px 0 8px; font-family:'JetBrains Mono',monospace; font-size: 12px; color:#444;">
+        FLUXO: Usuário → Cloudflare (proteção) → Traefik (roteamento) → NestJS (lógica) → Banco / Serviços externos
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- ── 02 · CLIENTES ── -->
+<div class="wrap">
+<section class="sec">
+  <div class="sec-header">
+    <div class="sec-num">02 — Camada de clientes</div>
+    <div class="sec-title">Duas Aplicações React Independentes</div>
+    <div class="sec-sub">Repositórios separados, deploys independentes, mas compartilhando a mesma API backend e serviços Ohanax.</div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:16px;">
+    <div class="dcard">
+      <div class="dcard-label">Frontend App · Repositório próprio</div>
+      <div class="dcard-title">React 19 — Interface do Usuário</div>
+      <div class="dcard-sub">Aplicação web responsiva. Usuários fazem login via Authify e acessam as funcionalidades do projeto.</div>
+      <div class="dcard-divider"></div>
+      <div class="spec-list">
+        <div class="spec-row"><span class="spec-key">Framework</span><span class="spec-val"><strong>React 19</strong></span></div>
+        <div class="spec-row"><span class="spec-key">Build tool</span><span class="spec-val">Vite</span></div>
+        <div class="spec-row"><span class="spec-key">Linguagem</span><span class="spec-val"><strong>TypeScript</strong></span></div>
+        <div class="spec-row"><span class="spec-key">CSS</span><span class="spec-val">Custom Design System (abstração sobre Tailwind CSS)</span></div>
+        <div class="spec-row"><span class="spec-key">Auth</span><span class="spec-val">Authify — httpOnly cookies (BFF)</span></div>
+        <div class="spec-row"><span class="spec-key">i18n</span><span class="spec-val">react-i18next (multi-idioma)</span></div>
+        <div class="spec-row"><span class="spec-key">Analytics</span><span class="spec-val">Firebase Analytics (provider abstrato)</span></div>
+        <div class="spec-row"><span class="spec-key">Deploy</span><span class="spec-val"><strong>AWS Amplify Hosting</strong> — Edge CDN global</span></div>
+        <div class="spec-row"><span class="spec-key">Target</span><span class="spec-val">Usuários finais da plataforma</span></div>
+      </div>
+      <div class="dcard-divider"></div>
+      <div class="chips">
+        <span class="chip-sm hi">React 19</span>
+        <span class="chip-sm hi">TypeScript</span>
+        <span class="chip-sm hi">Vite</span>
+        <span class="chip-sm">React Router v7</span>
+        <span class="chip-sm">react-i18next</span>
+        <span class="chip-sm">Custom DS</span>
+        <span class="chip-sm">Firebase Analytics</span>
+      </div>
+    </div>
+
+    <div class="dcard">
+      <div class="dcard-label">Frontend Admin · Repositório próprio</div>
+      <div class="dcard-title">React 19 — Painel Administrativo</div>
+      <div class="dcard-sub">Dashboard para administradores gerenciarem empresas, usuários, conteúdo e configurações da plataforma.</div>
+      <div class="dcard-divider"></div>
+      <div class="spec-list">
+        <div class="spec-row"><span class="spec-key">Framework</span><span class="spec-val"><strong>React 19</strong></span></div>
+        <div class="spec-row"><span class="spec-key">Build tool</span><span class="spec-val">Vite</span></div>
+        <div class="spec-row"><span class="spec-key">Linguagem</span><span class="spec-val"><strong>TypeScript</strong></span></div>
+        <div class="spec-row"><span class="spec-key">CSS</span><span class="spec-val">Custom Design System (abstração sobre Tailwind CSS)</span></div>
+        <div class="spec-row"><span class="spec-key">Auth</span><span class="spec-val">Authify — httpOnly cookies (BFF)</span></div>
+        <div class="spec-row"><span class="spec-key">i18n</span><span class="spec-val">react-i18next (multi-idioma)</span></div>
+        <div class="spec-row"><span class="spec-key">Analytics</span><span class="spec-val">Firebase Analytics (provider abstrato)</span></div>
+        <div class="spec-row"><span class="spec-key">Deploy</span><span class="spec-val"><strong>AWS Amplify Hosting</strong> — Edge CDN global</span></div>
+        <div class="spec-row"><span class="spec-key">Target</span><span class="spec-val">Administradores da plataforma</span></div>
+      </div>
+      <div class="dcard-divider"></div>
+      <div class="chips">
+        <span class="chip-sm hi">React 19</span>
+        <span class="chip-sm hi">TypeScript</span>
+        <span class="chip-sm hi">Vite</span>
+        <span class="chip-sm">React Router v7</span>
+        <span class="chip-sm">react-i18next</span>
+        <span class="chip-sm">Custom DS</span>
+        <span class="chip-sm">Firebase Analytics</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deploy pipelines: both apps -->
+  <div class="grid-2" style="margin-bottom:16px;">
+    <div class="full-block" style="margin-bottom:0;">
+      <div class="full-block-title">Deploy do Frontend App — AWS Amplify</div>
+      <div class="full-block-sub">Push no GitHub → Amplify CI → Vite Build → CloudFront Edge. Mesmo fluxo para ambos os frontends.</div>
+      <div class="spec-list">
+        <div class="spec-row"><span class="spec-key" style="width:80px;">01 Trigger</span><span class="spec-val">Dev faz push na main</span></div>
+        <div class="spec-row"><span class="spec-key" style="width:80px;">02 Detect</span><span class="spec-val">AWS Amplify detecta via GitHub App</span></div>
+        <div class="spec-row"><span class="spec-key" style="width:80px;">03 Build</span><span class="spec-val">npm install + vite build com env vars Amplify</span></div>
+        <div class="spec-row"><span class="spec-key" style="width:80px;">04 Deploy</span><span class="spec-val">Assets publicados em CloudFront Edge global</span></div>
+        <div class="spec-row"><span class="spec-key" style="width:80px;">Done</span><span class="spec-val">Live em ~2 min, sem servidor para gerenciar</span></div>
+      </div>
+    </div>
+    <div class="full-block" style="margin-bottom:0;">
+      <div class="full-block-title">Deploy do Frontend Admin — AWS Amplify</div>
+      <div class="full-block-sub">Push no GitHub → Amplify CI → Vite Build → CloudFront Edge. Mesmo fluxo para ambos os frontends.</div>
+      <div class="spec-list">
+        <div class="spec-row"><span class="spec-key" style="width:80px;">01 Trigger</span><span class="spec-val">Dev faz push na main</span></div>
+        <div class="spec-row"><span class="spec-key" style="width:80px;">02 Detect</span><span class="spec-val">AWS Amplify detecta via GitHub App</span></div>
+        <div class="spec-row"><span class="spec-key" style="width:80px;">03 Build</span><span class="spec-val">npm install + vite build com env vars Amplify</span></div>
+        <div class="spec-row"><span class="spec-key" style="width:80px;">04 Deploy</span><span class="spec-val">Assets publicados em CloudFront Edge global</span></div>
+        <div class="spec-row"><span class="spec-key" style="width:80px;">Done</span><span class="spec-val">Live em ~2 min, sem servidor para gerenciar</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- ── 03 · AUTH + BILLING ── -->
+<div class="wrap">
+<section class="sec">
+  <div class="sec-header">
+    <div class="sec-num">03 — Serviços Ohanax</div>
+    <div class="sec-title">Authify + Billify</div>
+    <div class="sec-sub">Autenticação e cobrança são serviços externos da Ohanax, consumidos via API. O template já entrega a integração pronta.</div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:16px;">
+    <div class="dcard">
+      <div class="dcard-label">Autenticação · auth.ohanax.com</div>
+      <div class="dcard-title">Authify — Authentication as a Service</div>
+      <div class="dcard-sub">Toda a autenticação é delegada ao Authify. O backend implementa o padrão BFF: recebe o código OAuth, troca por tokens e os salva em cookies httpOnly — o frontend nunca toca no token.</div>
+      <div class="dcard-divider"></div>
+      <div class="spec-list">
+        <div class="spec-row"><span class="spec-key">Serviço</span><span class="spec-val"><strong>Authify</strong> — serviço externo Ohanax</span></div>
+        <div class="spec-row"><span class="spec-key">URL</span><span class="spec-val"><a href="https://auth.ohanax.com" target="_blank">auth.ohanax.com</a></span></div>
+        <div class="spec-row"><span class="spec-key">Módulo</span><span class="spec-val"><code style="font-family:var(--mono);font-size:11px;">auth/</code> já incluso no template</span></div>
+        <div class="spec-row"><span class="spec-key">Padrão</span><span class="spec-val"><strong>OAuth BFF</strong> (Backend-for-Frontend)</span></div>
+        <div class="spec-row"><span class="spec-key">Segurança</span><span class="spec-val"><strong>httpOnly cookies</strong> — token nunca exposto ao JS</span></div>
+        <div class="spec-row"><span class="spec-key">Funcionalidades</span><span class="spec-val">Login · Cadastro · Magic Link · Social Login</span></div>
+        <div class="spec-row"><span class="spec-key">RBAC / Roles</span><span class="spec-val">Configurável por projeto (ex: ADMIN, MEMBER)</span></div>
+        <div class="spec-row"><span class="spec-key">Multi-tenant</span><span class="spec-val">Isolamento por empresa via CompanyModule</span></div>
+      </div>
+      <div class="dcard-divider"></div>
+      <div class="chips">
+        <span class="chip-sm hi">OAuth 2.0 / OIDC</span>
+        <span class="chip-sm hi">httpOnly cookies</span>
+        <span class="chip-sm hi">BFF pattern</span>
+        <span class="chip-sm">SDK JavaScript</span>
+        <span class="chip-sm">Magic Link</span>
+        <span class="chip-sm">Social Login</span>
+      </div>
+    </div>
+
+    <div class="dcard">
+      <div class="dcard-label">Billing · billing.ohanax.com</div>
+      <div class="dcard-title">Billify — Billing + Métricas SaaS</div>
+      <div class="dcard-sub">Cobrança de planos da empresa cliente. O template inclui o módulo de billing pronto para conectar ao Billify e controlar acesso por plano ativo.</div>
+      <div class="dcard-divider"></div>
+      <div class="spec-list">
+        <div class="spec-row"><span class="spec-key">Serviço</span><span class="spec-val"><strong>Billify</strong> — serviço externo Ohanax</span></div>
+        <div class="spec-row"><span class="spec-key">URL</span><span class="spec-val"><a href="https://billing.ohanax.com" target="_blank">billing.ohanax.com</a></span></div>
+        <div class="spec-row"><span class="spec-key">Módulo</span><span class="spec-val"><code style="font-family:var(--mono);font-size:11px;">billing/</code> já incluso no template</span></div>
+        <div class="spec-row"><span class="spec-key">Padrão</span><span class="spec-val">API REST chamada pelo backend</span></div>
+        <div class="spec-row"><span class="spec-key">Segurança</span><span class="spec-val"><strong>API Key</strong> via env var (nunca no frontend)</span></div>
+        <div class="spec-row"><span class="spec-key">Funcionalidades</span><span class="spec-val">Planos · Assinaturas · Checkout · Webhooks</span></div>
+        <div class="spec-row"><span class="spec-key">Pagamentos</span><span class="spec-val">Stripe · PIX · Boleto</span></div>
+        <div class="spec-row"><span class="spec-key">Métricas</span><span class="spec-val">MRR · ARR · Churn · LTV no dashboard</span></div>
+      </div>
+      <div class="dcard-divider"></div>
+      <div class="chips">
+        <span class="chip-sm hi">Stripe</span>
+        <span class="chip-sm hi">PIX</span>
+        <span class="chip-sm">Boleto</span>
+        <span class="chip-sm">Webhooks real-time</span>
+        <span class="chip-sm">Dunning automático</span>
+        <span class="chip-sm">Checkout white-label</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Company module -->
+  <div class="full-block">
+    <div class="full-block-title">Gestão de Empresas (CompanyModule)</div>
+    <div class="full-block-sub">Módulo já incluso no template. Multi-tenant: cada empresa tem acesso apenas aos seus próprios dados.</div>
+    <div class="spec-list" style="max-width:640px;">
+      <div class="spec-row"><span class="spec-key" style="width:160px;">Entidades</span><span class="spec-val"><code style="font-family:var(--mono);font-size:11px;">app_companies</code> + <code style="font-family:var(--mono);font-size:11px;">app_company_members</code> + <code style="font-family:var(--mono);font-size:11px;">app_company_invites</code></span></div>
+      <div class="spec-row"><span class="spec-key" style="width:160px;">Isolamento</span><span class="spec-val">Cada empresa acessa apenas seus próprios dados (multi-tenant por company_id)</span></div>
+      <div class="spec-row"><span class="spec-key" style="width:160px;">Convites</span><span class="spec-val">Sistema de convite por e-mail para novos membros</span></div>
+      <div class="spec-row"><span class="spec-key" style="width:160px;">Roles</span><span class="spec-val">CompanyRole enum (OWNER, ADMIN, MEMBER) — configurável por projeto</span></div>
+      <div class="spec-row"><span class="spec-key" style="width:160px;">Onboarding</span><span class="spec-val">Empresa criada via admin ou self-service (configurável)</span></div>
+    </div>
+  </div>
+
+</section>
+</div>
+
+<!-- ── 04 · BACKEND ── -->
+<div class="wrap">
+<section class="sec">
+  <div class="sec-header">
+    <div class="sec-num">04 — Backend</div>
+    <div class="sec-title">API REST · NestJS 11</div>
+    <div class="sec-sub">Core da aplicação. Lógica de negócio, acesso a dados e comunicação com serviços externos. Estrutura modular herdada do template Ohanax.</div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:16px;">
+    <div class="dcard">
+      <div class="dcard-label">Core</div>
+      <div class="dcard-title">NestJS 11 Application</div>
+      <div class="dcard-sub">Framework modular com injeção de dependência. Módulos por domínio. Estrutura herdada do template com admin, auth, billing, analytics e company já configurados.</div>
+      <div class="dcard-divider"></div>
+      <div class="spec-list">
+        <div class="spec-row"><span class="spec-key">Runtime</span><span class="spec-val"><strong>Node.js 22 LTS</strong></span></div>
+        <div class="spec-row"><span class="spec-key">Framework</span><span class="spec-val"><strong>NestJS 11</strong></span></div>
+        <div class="spec-row"><span class="spec-key">Linguagem</span><span class="spec-val"><strong>TypeScript</strong> strict mode</span></div>
+        <div class="spec-row"><span class="spec-key">ORM</span><span class="spec-val">TypeORM + migrations versionadas</span></div>
+        <div class="spec-row"><span class="spec-key">Porta</span><span class="spec-val">:8000 (apenas rede interna Docker)</span></div>
+        <div class="spec-row"><span class="spec-key">Docs</span><span class="spec-val">Swagger / OpenAPI 3.0 auto-gerado</span></div>
+      </div>
+    </div>
+
+    <div class="dcard">
+      <div class="dcard-label">Estrutura de Módulos (do template)</div>
+      <div class="dcard-title">Módulos inclusos no template</div>
+      <div class="dcard-sub">O template entrega os módulos base prontos. Módulos específicos do projeto são adicionados sobre essa estrutura.</div>
+      <div class="dcard-divider"></div>
+      <div class="spec-list">
+        <div class="spec-row"><span class="spec-key">admin/</span><span class="spec-val">Endpoints do dashboard admin (users, sessions)</span></div>
+        <div class="spec-row"><span class="spec-key">auth/</span><span class="spec-val">Auth via Authify (BFF pattern, httpOnly cookies)</span></div>
+        <div class="spec-row"><span class="spec-key">billing/</span><span class="spec-val">Integração Billify (planos, assinaturas)</span></div>
+        <div class="spec-row"><span class="spec-key">analytics/</span><span class="spec-val">Event tracking (frontend + backend)</span></div>
+        <div class="spec-row"><span class="spec-key">company/</span><span class="spec-val">Gestão multi-tenant (empresas, membros, convites)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Database tables -->
+  <div class="full-block">
+    <div class="full-block-title">Banco de Dados — PostgreSQL + MongoDB</div>
+    <div class="full-block-sub">Dados de negócio no PostgreSQL (TypeORM). Logs e analytics no MongoDB (Mongoose) — banco dedicado para métricas e auditoria.</div>
+
+    <div style="font-size:11px; color:var(--t3); margin-bottom:12px; font-weight:600;">PostgreSQL — Dados de negócio</div>
+    <table class="btable" style="margin-bottom:20px;">
+      <thead><tr><th>Tabela</th><th>Descrição</th><th>Módulo</th></tr></thead>
+      <tbody>
+        <tr><td><span class="mono">app_admin_users</span></td><td>Contas de administrador do sistema</td><td>admin</td></tr>
+        <tr><td><span class="mono">app_admin_sessions</span></td><td>Sessões de admin (refresh tokens)</td><td>admin</td></tr>
+        <tr><td><span class="mono">app_companies</span></td><td>Empresas cadastradas (multi-tenant)</td><td>company</td></tr>
+        <tr><td><span class="mono">app_company_members</span></td><td>Membros vinculados a uma empresa</td><td>company</td></tr>
+        <tr><td><span class="mono">app_company_invites</span></td><td>Convites pendentes para membros</td><td>company</td></tr>
+        <tr><td><span class="mono">app_activity_logs</span></td><td>Rastreamento de atividade do usuário</td><td>analytics</td></tr>
+        <tr><td><span class="mono">app_secure_store</span></td><td>Armazenamento seguro de dados criptografados</td><td>common</td></tr>
+      </tbody>
+    </table>
+
+    <div style="font-size:11px; color:var(--t3); margin-bottom:12px; font-weight:600;">MongoDB — Logs e Analytics (banco dedicado no Coolify)</div>
+    <table class="btable">
+      <thead><tr><th>Collection</th><th>Descrição</th><th>Uso</th></tr></thead>
+      <tbody>
+        <tr><td><span class="mono">analytics_events</span></td><td>Eventos do frontend (pageview, clique, funil, UTM)</td><td>Métricas de produto, A/B testing, funis</td></tr>
+        <tr><td><span class="mono">audit_logs</span></td><td>Logs de requests e ações do backend</td><td>Auditoria, debug, performance (duration_ms)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</section>
+</div>
+
+<!-- ── 05 · INFRA ── -->
+<div class="wrap">
+<section class="sec">
+  <div class="sec-header">
+    <div class="sec-num">05 — Infraestrutura</div>
+    <div class="sec-title">Hetzner · Docker · Coolify · Traefik</div>
+    <div class="sec-sub">Stack self-hosted sobre VPS Hetzner, orquestrado pelo Coolify. O Traefik funciona como reverse proxy interno — roteando cada requisição para o container correto.</div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:16px;">
+    <div class="dcard">
+      <div class="dcard-label">VPS · Hetzner Cloud</div>
+      <div class="dcard-title">CPX31 — 4 vCPU · 8 GB RAM</div>
+      <div class="dcard-sub">Melhor custo-benefício do mercado para workloads de produção. ~€15/mês vs $80+/mês no equivalente AWS.</div>
+      <div class="dcard-divider"></div>
+      <div class="spec-list">
+        <div class="spec-row"><span class="spec-key">Tipo</span><span class="spec-val"><strong>CPX31</strong> (~€15/mês)</span></div>
+        <div class="spec-row"><span class="spec-key">CPU</span><span class="spec-val">4 vCPU AMD (shared performance)</span></div>
+        <div class="spec-row"><span class="spec-key">RAM</span><span class="spec-val">8 GB DDR4</span></div>
+        <div class="spec-row"><span class="spec-key">Storage</span><span class="spec-val">160 GB NVMe SSD</span></div>
+        <div class="spec-row"><span class="spec-key">Rede</span><span class="spec-val">20 TB/mês · 1 Gbps uplink</span></div>
+        <div class="spec-row"><span class="spec-key">OS</span><span class="spec-val">Ubuntu 24.04 LTS</span></div>
+        <div class="spec-row"><span class="spec-key">Firewall</span><span class="spec-val">Hetzner Cloud Firewall + UFW (dual-layer)</span></div>
+        <div class="spec-row"><span class="spec-key">Swap</span><span class="spec-val">4 GB configurado para picos de memória</span></div>
+      </div>
+    </div>
+
+    <div class="dcard">
+      <div class="dcard-label">Orquestrador · Coolify</div>
+      <div class="dcard-title">Coolify v4 — PaaS Self-Hosted</div>
+      <div class="dcard-sub">Gerencia deploy, SSL, variáveis de ambiente, backups e ciclo de vida de todos os containers. Interface web acessível apenas via IP restrito.</div>
+      <div class="dcard-divider"></div>
+      <div class="spec-list">
+        <div class="spec-row"><span class="spec-key">Versão</span><span class="spec-val"><strong>v4.0.0-beta</strong> — manter sempre atualizado</span></div>
+        <div class="spec-row"><span class="spec-key">SSL</span><span class="spec-val">Let's Encrypt automático (wildcard via DNS)</span></div>
+        <div class="spec-row"><span class="spec-key">Deploy</span><span class="spec-val">GitHub App auto-deploy → build direto no servidor</span></div>
+        <div class="spec-row"><span class="spec-key">Env Vars</span><span class="spec-val">Hierarquia: team / project / env / app</span></div>
+        <div class="spec-row"><span class="spec-key">Backup DB</span><span class="spec-val">Agendado a cada 6h → AWS S3</span></div>
+        <div class="spec-row"><span class="spec-key">UI</span><span class="spec-val">Dashboard restrito por IP / Cloudflare Access</span></div>
+        <div class="spec-row"><span class="spec-key">Rollback</span><span class="spec-val">5 últimas versões mantidas para rollback imediato</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="dcard">
+      <div class="dcard-label">Reverse Proxy · Traefik v3</div>
+      <div class="dcard-title">Roteamento e Edge Interno</div>
+      <div class="dcard-sub">Intercepta toda requisição que chega no servidor e a roteia para o container correto com base no hostname. Gerenciado automaticamente pelo Coolify.</div>
+      <div class="dcard-divider"></div>
+      <div class="spec-list">
+        <div class="spec-row"><span class="spec-key">Versão</span><span class="spec-val"><strong>Traefik v3.6</strong></span></div>
+        <div class="spec-row"><span class="spec-key">Routing</span><span class="spec-val">Labels Docker (hostname-based, automático)</span></div>
+        <div class="spec-row"><span class="spec-key">SSL</span><span class="spec-val">Let's Encrypt ACME — renovação automática</span></div>
+        <div class="spec-row"><span class="spec-key">Middleware</span><span class="spec-val">Rate limit · HSTS · Redirect HTTP→HTTPS</span></div>
+        <div class="spec-row"><span class="spec-key">Health checks</span><span class="spec-val">Em todos os serviços registrados</span></div>
+        <div class="spec-row"><span class="spec-key">Portas</span><span class="spec-val">80 (redirect) · 443 (TLS) · 8080 (dashboard interno)</span></div>
+      </div>
+    </div>
+
+    <div class="dcard">
+      <div class="dcard-label">Containers · Docker</div>
+      <div class="dcard-title">Isolamento e Reprodutibilidade</div>
+      <div class="dcard-sub">Cada serviço em container isolado. Rede interna Docker garante que banco e Redis nunca fiquem expostos publicamente.</div>
+      <div class="dcard-divider"></div>
+      <div class="spec-list">
+        <div class="spec-row"><span class="spec-key">Backend</span><span class="spec-val"><strong>NestJS</strong> · multi-stage build · non-root user</span></div>
+        <div class="spec-row"><span class="spec-key">Database</span><span class="spec-val"><strong>PostgreSQL 17</strong> · dados de negócio · rede interna</span></div>
+        <div class="spec-row"><span class="spec-key">Logs DB</span><span class="spec-val"><strong>MongoDB 7</strong> · analytics + audit logs · rede interna</span></div>
+        <div class="spec-row"><span class="spec-key">Cache</span><span class="spec-val"><strong>Redis 7</strong> · rede interna · dedicado por projeto</span></div>
+        <div class="spec-row"><span class="spec-key">Rede</span><span class="spec-val">Docker network isolada por projeto Coolify</span></div>
+        <div class="spec-row"><span class="spec-key">Limits</span><span class="spec-val">CPU + Memory limits em todos os containers</span></div>
+        <div class="spec-row"><span class="spec-key">Init</span><span class="spec-val"><code style="font-family:var(--mono)">tini</code> como PID 1 (graceful shutdown)</span></div>
+      </div>
+    </div>
+  </div>
+
+</section>
+</div>
+
+<!-- ── 06 · CI/CD ── -->
+<div class="wrap">
+<section class="sec">
+  <div class="sec-header">
+    <div class="sec-num">06 — CI/CD</div>
+    <div class="sec-title">Deploy Automático</div>
+    <div class="sec-sub">Dois pipelines distintos — backend via GitHub Actions (CI) + Coolify auto-deploy (build no servidor, sem registry externo), frontend via AWS Amplify.</div>
+  </div>
+
+  <!-- Backend Pipeline -->
+  <div class="full-block" style="margin-bottom:16px;">
+    <div class="full-block-title">Pipeline Backend — NestJS → Hetzner (via Coolify, sem registry externo)</div>
+    <div class="full-block-sub">GitHub Actions roda os checks (lint, testes, coverage). O Coolify detecta o push via GitHub App e faz o build + deploy diretamente no servidor — sem precisar de Docker Hub, ECR ou webhook manual.</div>
+    <div class="pipeline">
+      <div class="pipeline-step">
+        <div class="p-num">01 · TRIGGER</div>
+        <div class="p-name">Push na main</div>
+        <div class="p-desc">PR mergeado ou push direto na main do repo backend</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="p-num">02 · CI</div>
+        <div class="p-name">GitHub Actions</div>
+        <div class="p-desc">Lint + TypeScript check + testes unitários (Jest)</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="p-num">03 · DETECT</div>
+        <div class="p-name">Coolify Auto-Deploy</div>
+        <div class="p-desc">Coolify detecta o push via GitHub App e inicia o build automaticamente</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="p-num">04 · BUILD</div>
+        <div class="p-name">Build no Servidor</div>
+        <div class="p-desc">Coolify faz clone do repo e build do Docker <strong>direto no servidor Hetzner</strong></div>
+      </div>
+      <div class="pipeline-step">
+        <div class="p-num">05 · DEPLOY</div>
+        <div class="p-name">Rolling Update</div>
+        <div class="p-desc">Novo container sobe antes do antigo descer. Zero downtime. Traefik atualiza o roteamento automaticamente.</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="p-num">DONE</div>
+        <div class="p-name">Live em produção</div>
+        <div class="p-desc">Rollback imediato disponível pelas últimas 5 versões buildadas</div>
+      </div>
+    </div>
+    <div class="info-box" style="margin-top:16px;">
+      <div class="info-icon">💡</div>
+      <div style="font-size:11px; color:var(--t3); line-height:1.6;">
+        <strong style="color:var(--t2);">Por que sem registry externo?</strong> O Coolify pode fazer o build do Dockerfile diretamente no servidor a partir do repositório Git — sem precisar empurrar imagem para o Docker Hub ou GitHub Container Registry. Isso simplifica o pipeline, reduz custos e elimina dependências externas no fluxo de deploy. A imagem existe apenas localmente no servidor.
+      </div>
+    </div>
+  </div>
+
+  <!-- Dockerfile -->
+  <div class="dcard">
+    <div class="dcard-label">Dockerfile Multi-Stage — NestJS</div>
+    <div class="dcard-title">Build otimizado para produção</div>
+    <div class="dcard-sub">Stage builder usa devDependencies para compilar TypeScript. Stage runner copia apenas o dist compilado.</div>
+    <div class="code-block"><span class="c"># Stage 1: Build (inclui devDependencies para compilar)</span>
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+<span class="c"># Stage 2: Runner de produção (imagem final mínima)</span>
+FROM node:22-alpine AS production
+WORKDIR /app
+<span class="c"># tini como PID 1 para graceful shutdown no Docker/Coolify</span>
+RUN apk add --no-cache <span class="k">tini</span> fontconfig ttf-dejavu curl
+RUN addgroup -g 1001 -S nodejs && adduser -S nestjs -u 1001
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package*.json ./
+<span class="c"># Build tools temporários para compilar bcrypt nativo</span>
+RUN apk add --no-cache --virtual .build-deps python3 make g++ && \
+    npm ci --only=production && \
+    npm rebuild bcrypt --build-from-source && \
+    npm cache clean --force && apk del .build-deps && \
+    mkdir -p /app/logs && chown -R nestjs:nodejs /app
+USER nestjs
+<span class="k">ENV NODE_ENV=production</span>
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:8000/health || exit 1
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["node", "dist/main"]</div>
+  </div>
+
+</section>
+</div>
+
+<!-- ── 07 · STORAGE ── -->
+<div class="wrap">
+<section class="sec">
+  <div class="sec-header">
+    <div class="sec-num">07 — Armazenamento</div>
+    <div class="sec-title">AWS S3 + CloudFront</div>
+    <div class="sec-sub">Vídeos e assets armazenados no AWS S3. Entregues via CloudFront CDN com Signed URLs geradas pelo backend — sem exposição direta do bucket.</div>
+  </div>
+
+  <div class="grid-2">
+    <div class="dcard">
+      <div class="dcard-label">Object Storage</div>
+      <div class="dcard-title">AWS S3</div>
+      <div class="dcard-sub">Bucket privado na AWS para vídeos MP4, thumbnails e assets de mídia. Nenhum arquivo é acessível publicamente — todo acesso é via Signed URL com TTL.</div>
+      <div class="dcard-divider"></div>
+      <div class="spec-list">
+        <div class="spec-row"><span class="spec-key">Provider</span><span class="spec-val"><strong>AWS S3</strong></span></div>
+        <div class="spec-row"><span class="spec-key">Bucket</span><span class="spec-val">Privado — sem acesso público direto</span></div>
+        <div class="spec-row"><span class="spec-key">Região</span><span class="spec-val">Configurável por projeto (us-east-1 padrão)</span></div>
+        <div class="spec-row"><span class="spec-key">Conteúdo</span><span class="spec-val">Vídeos MP4 · Thumbnails · Assets estáticos</span></div>
+        <div class="spec-row"><span class="spec-key">Acesso</span><span class="spec-val"><strong>Signed URLs</strong> geradas pelo NestJS com TTL limitado</span></div>
+        <div class="spec-row"><span class="spec-key">Upload</span><span class="spec-val">Via backend (presigned URL para upload direto)</span></div>
+        <div class="spec-row"><span class="spec-key">Backup DB</span><span class="spec-val">Dumps PostgreSQL enviados aqui a cada 6h via Coolify</span></div>
+      </div>
+      <div class="dcard-divider"></div>
+      <div class="chips">
+        <span class="chip-sm hi">AWS S3</span>
+        <span class="chip-sm hi">Bucket privado</span>
+        <span class="chip-sm">Presigned URLs</span>
+        <span class="chip-sm">Multipart upload</span>
+        <span class="chip-sm">Versioning</span>
+      </div>
+    </div>
+
+    <div class="dcard">
+      <div class="dcard-label">CDN · Entrega de conteúdo</div>
+      <div class="dcard-title">CloudFront</div>
+      <div class="dcard-sub">Distribuição global do conteúdo do S3. Vídeos são servidos do ponto de presença mais próximo do usuário, reduzindo latência e custo de transferência do S3.</div>
+      <div class="dcard-divider"></div>
+      <div class="spec-list">
+        <div class="spec-row"><span class="spec-key">Provider</span><span class="spec-val"><strong>AWS CloudFront</strong></span></div>
+        <div class="spec-row"><span class="spec-key">Origem</span><span class="spec-val">Bucket AWS S3 (acesso via OAC)</span></div>
+        <div class="spec-row"><span class="spec-key">Cobertura</span><span class="spec-val">Edge locations globais AWS</span></div>
+        <div class="spec-row"><span class="spec-key">Signed URLs</span><span class="spec-val">CloudFront Signed URLs com expiração</span></div>
+        <div class="spec-row"><span class="spec-key">Cache</span><span class="spec-val">Vídeos em cache no edge (sem re-download do S3)</span></div>
+        <div class="spec-row"><span class="spec-key">HTTPS</span><span class="spec-val">SSL obrigatório em todas as URLs</span></div>
+      </div>
+      <div class="dcard-divider"></div>
+      <div class="chips">
+        <span class="chip-sm hi">CloudFront CDN</span>
+        <span class="chip-sm hi">Signed URLs</span>
+        <span class="chip-sm">Edge caching</span>
+        <span class="chip-sm">OAC (Origin Access Control)</span>
+      </div>
+    </div>
+  </div>
+
+</section>
+</div>
+
+<!-- ── 08 · SEGURANÇA ── -->
+<div class="wrap">
+<section class="sec">
+  <div class="sec-header">
+    <div class="sec-num">08 — Segurança</div>
+    <div class="sec-title">Defesa em Camadas</div>
+    <div class="sec-sub">Múltiplas camadas de proteção desde a borda até o container. Cada item abaixo foi verificado no código-fonte do template.</div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:16px;">
+    <div class="sec-items">
+      <div class="sec-item">
+        <div class="sec-item-icon">🌐</div>
+        <div class="sec-item-body">
+          <div class="sec-item-title">Cloudflare — Edge Protection</div>
+          <div class="sec-item-desc">DDoS mitigation, WAF, bot management e SSL termination antes de chegar ao servidor. IP real do servidor oculto atrás do proxy Cloudflare.</div>
+          <div class="sec-item-tags"><span class="chip-sm">DDoS mitigation</span><span class="chip-sm">WAF</span><span class="chip-sm">SSL edge</span><span class="chip-sm">IP hiding</span></div>
+        </div>
+      </div>
+      <div class="sec-item">
+        <div class="sec-item-icon">🔥</div>
+        <div class="sec-item-body">
+          <div class="sec-item-title">Firewall — Hetzner + UFW (dual-layer)</div>
+          <div class="sec-item-desc">Hetzner Cloud Firewall como primeira camada + UFW no SO. Apenas portas 22, 80, 443 e 8000 (Coolify UI). Deny-all por padrão.</div>
+          <div class="sec-item-tags"><span class="chip-sm">deny-all default</span><span class="chip-sm">port allowlist</span><span class="chip-sm">dual-layer</span></div>
+        </div>
+      </div>
+      <div class="sec-item">
+        <div class="sec-item-icon">🔑</div>
+        <div class="sec-item-body">
+          <div class="sec-item-title">SSH Hardening</div>
+          <div class="sec-item-desc">Porta não-padrão (2222), apenas chave ED25519, sem root login, AllowUsers restrito. Fail2Ban com ban de 24h após 3 tentativas falhas.</div>
+          <div class="sec-item-tags"><span class="chip-sm">ED25519 only</span><span class="chip-sm">no password auth</span><span class="chip-sm">Fail2Ban</span><span class="chip-sm">porta 2222</span></div>
+        </div>
+      </div>
+      <div class="sec-item">
+        <div class="sec-item-icon">🍪</div>
+        <div class="sec-item-body">
+          <div class="sec-item-title">Autenticação BFF + httpOnly Cookies</div>
+          <div class="sec-item-desc">Tokens em cookies httpOnly + Secure + SameSite. Frontend nunca acessa o token — BFF pattern via auth-bff.controller.ts. Refresh tokens criptografados com AES-256-GCM no banco.</div>
+          <div class="sec-item-tags"><span class="chip-sm chip-ok">httpOnly: true</span><span class="chip-sm chip-ok">secure: true</span><span class="chip-sm chip-ok">BFF pattern</span><span class="chip-sm chip-ok">AES-256-GCM</span></div>
+        </div>
+      </div>
+      <div class="sec-item">
+        <div class="sec-item-icon">🛡️</div>
+        <div class="sec-item-body">
+          <div class="sec-item-title">Headers HTTP — Helmet.js</div>
+          <div class="sec-item-desc">Configurado em main.ts com HSTS (1 ano + preload), X-Frame-Options: DENY, X-Content-Type-Options: nosniff, CSP com diretivas restritas, Referrer-Policy strict-origin-when-cross-origin.</div>
+          <div class="sec-item-tags"><span class="chip-sm chip-ok">HSTS preload</span><span class="chip-sm chip-ok">X-Frame DENY</span><span class="chip-sm chip-ok">CSP</span><span class="chip-sm chip-ok">nosniff</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-items">
+      <div class="sec-item">
+        <div class="sec-item-icon">⏱️</div>
+        <div class="sec-item-body">
+          <div class="sec-item-title">Rate Limiting — 3 camadas</div>
+          <div class="sec-item-desc">ThrottlerModule com 3 tiers: short (3/s), medium (20/10s), long (100/min). Decorators customizados: @StrictThrottle (auth), @ApiThrottle (API), @AuditThrottle (operações caras). Tracking por user ID ou IP.</div>
+          <div class="sec-item-tags"><span class="chip-sm chip-ok">3 req/s</span><span class="chip-sm chip-ok">20 req/10s</span><span class="chip-sm chip-ok">100 req/min</span><span class="chip-sm chip-ok">per-user tracking</span></div>
+        </div>
+      </div>
+      <div class="sec-item">
+        <div class="sec-item-icon">🔒</div>
+        <div class="sec-item-body">
+          <div class="sec-item-title">CORS — Origins explícitos</div>
+          <div class="sec-item-desc">CORS em main.ts com callback dinâmico — origins carregados via CORS_ORIGIN (env var). Localhost só em development. Credentials: true para cookies. Nunca usa origin: '*'.</div>
+          <div class="sec-item-tags"><span class="chip-sm chip-ok">env-driven origins</span><span class="chip-sm chip-ok">credentials: true</span><span class="chip-sm chip-ok">no wildcard</span></div>
+        </div>
+      </div>
+      <div class="sec-item">
+        <div class="sec-item-icon">✅</div>
+        <div class="sec-item-body">
+          <div class="sec-item-title">Validação — class-validator + ValidationPipe</div>
+          <div class="sec-item-desc">ValidationPipe global com whitelist: true, forbidNonWhitelisted: true, transform: true. Todos os DTOs usam decorators: @IsString, @MaxLength, @IsUUID, @ValidateNested. Requests com campos extras retornam 400.</div>
+          <div class="sec-item-tags"><span class="chip-sm chip-ok">whitelist</span><span class="chip-sm chip-ok">forbidNonWhitelisted</span><span class="chip-sm chip-ok">transform</span></div>
+        </div>
+      </div>
+      <div class="sec-item">
+        <div class="sec-item-icon">🐳</div>
+        <div class="sec-item-body">
+          <div class="sec-item-title">Container Security</div>
+          <div class="sec-item-desc">Multi-stage build (Alpine). Usuário non-root nestjs:1001. Tini como init (PID 1). .dockerignore exclui .env, .git, specs. DB e Redis sem porta pública — rede interna Docker.</div>
+          <div class="sec-item-tags"><span class="chip-sm chip-ok">non-root</span><span class="chip-sm chip-ok">multi-stage</span><span class="chip-sm chip-ok">tini init</span><span class="chip-sm chip-ok">.env excluded</span></div>
+        </div>
+      </div>
+      <div class="sec-item">
+        <div class="sec-item-icon">📋</div>
+        <div class="sec-item-body">
+          <div class="sec-item-title">Logs — Sanitização automática</div>
+          <div class="sec-item-desc">Winston com JSON estruturado em produção. AuditLoggerInterceptor em todas as requests com requestId (UUID). Lista de campos sensíveis (password, token, apiKey, creditCard, cpf) redacted para [REDACTED] automaticamente.</div>
+          <div class="sec-item-tags"><span class="chip-sm chip-ok">JSON structured</span><span class="chip-sm chip-ok">auto-redact</span><span class="chip-sm chip-ok">correlation ID</span><span class="chip-sm chip-ok">audit trail</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+</div>
+
+<!-- ── 09 · OBSERVABILIDADE ── -->
+<div class="wrap">
+<section class="sec">
+  <div class="sec-header">
+    <div class="sec-num">09 — Observabilidade</div>
+    <div class="sec-title">Monitoramento & Alertas</div>
+    <div class="sec-sub">Stack completa provisionada como código. Todos os serviços no docker-compose.observability.yml, rede isolada, sem portas públicas.</div>
+  </div>
+
+  <div class="mon-grid" style="margin-bottom:16px;">
+    <div class="mon-card">
+      <div class="mon-icon">📊</div>
+      <div class="mon-title">Grafana 11.5</div>
+      <div class="mon-desc">Dashboards provisionados como código (JSON). 2 dashboards pré-configurados: NestJS API (request rate, latency p50/p95/p99, error rate, memory, event loop) e Logs (volume por level, error logs, live tail). Datasources Prometheus + Loki auto-provisionados.</div>
+      <div class="mon-tags"><span class="chip-sm chip-ok">dashboards as code</span><span class="chip-sm chip-ok">datasources auto</span><span class="chip-sm chip-ok">2 dashboards</span></div>
+    </div>
+
+    <div class="mon-card">
+      <div class="mon-icon">🔥</div>
+      <div class="mon-title">Prometheus 2.53</div>
+      <div class="mon-desc">Scrape a cada 10s do endpoint /metrics do NestJS (prom-client). Métricas: request rate, duration histogram, in-flight, response size, Node.js heap, event loop lag, CPU, active handles. Retenção: 30 dias.</div>
+      <div class="mon-tags"><span class="chip-sm chip-ok">/metrics endpoint</span><span class="chip-sm chip-ok">prom-client</span><span class="chip-sm chip-ok">10s scrape</span><span class="chip-sm chip-ok">30d retention</span></div>
+    </div>
+
+    <div class="mon-card">
+      <div class="mon-icon">📝</div>
+      <div class="mon-title">Loki 3.4 + Promtail</div>
+      <div class="mon-desc">Promtail coleta logs de todos os containers Docker via socket. Pipeline: parsing JSON, extração de level/timestamp/context, labels automáticos (container, service). Winston JSON em produção. Retenção: 30 dias. Consulta via LogQL no Grafana.</div>
+      <div class="mon-tags"><span class="chip-sm chip-ok">Promtail</span><span class="chip-sm chip-ok">JSON pipeline</span><span class="chip-sm chip-ok">LogQL</span><span class="chip-sm chip-ok">30d retention</span></div>
+    </div>
+
+    <div class="mon-card">
+      <div class="mon-icon">🚨</div>
+      <div class="mon-title">Alertas Provisionados</div>
+      <div class="mon-desc">6 alertas configurados como código: error rate > 1% (critical), p95 latency > 2s, RSS memory > 512MB, event loop lag > 100ms, target down (critical). + alerta de volume de error logs > 10/min via Loki.</div>
+      <div class="mon-tags"><span class="chip-sm chip-ok">6 alert rules</span><span class="chip-sm chip-ok">as code</span><span class="chip-sm">Telegram/Slack</span></div>
+    </div>
+
+    <div class="mon-card">
+      <div class="mon-icon">📡</div>
+      <div class="mon-title">Uptime Kuma 1.23</div>
+      <div class="mon-desc">Container dedicado para status page e monitoramento de uptime. Checks HTTP a cada 60s nos endpoints: /health, /health/ready, /health/live. Alertas por Telegram/Slack quando serviço cai.</div>
+      <div class="mon-tags"><span class="chip-sm chip-ok">status page</span><span class="chip-sm chip-ok">60s checks</span><span class="chip-sm">Telegram alerts</span></div>
+    </div>
+
+    <div class="mon-card">
+      <div class="mon-icon">💾</div>
+      <div class="mon-title">Backup PostgreSQL → S3</div>
+      <div class="mon-desc">Container pg-backup com cron a cada 6h. pg_dump comprimido (gzip), upload para S3 (STANDARD_IA). Retenção local: 7 dias. Script em monitoring/backup/pg-backup-s3.sh. Env vars: S3_BACKUP_BUCKET, DATABASE_URL, AWS credentials.</div>
+      <div class="mon-tags"><span class="chip-sm chip-ok">6h cron</span><span class="chip-sm chip-ok">gzip + S3</span><span class="chip-sm chip-ok">STANDARD_IA</span><span class="chip-sm chip-ok">7d local</span></div>
+    </div>
+
+    <div class="mon-card">
+      <div class="mon-icon">🔁</div>
+      <div class="mon-title">Rolling Deploy & Rollback</div>
+      <div class="mon-desc">Novo container sobe antes do antigo descer. Zero downtime. Últimas 5 versões mantidas para rollback imediato via Coolify sem necessidade de rebuild.</div>
+      <div class="mon-tags"><span class="chip-sm">zero-downtime</span><span class="chip-sm">5 versões</span><span class="chip-sm">rollback imediato</span></div>
+    </div>
+
+    <div class="mon-card">
+      <div class="mon-icon">🏗️</div>
+      <div class="mon-title">Infra como Código</div>
+      <div class="mon-desc">Tudo provisionado via arquivos no repositório. docker-compose.observability.yml com 7 serviços. monitoring/ com configs de Prometheus, Loki, Promtail, Grafana (datasources, dashboards, alertas), e script de backup.</div>
+      <div class="mon-tags"><span class="chip-sm chip-ok">7 containers</span><span class="chip-sm chip-ok">GitOps ready</span><span class="chip-sm chip-ok">zero config manual</span></div>
+    </div>
+  </div>
+
+</section>
+</div>
+
+<!-- ── 10 · PILARES ── -->
+<div class="wrap">
+<section class="sec">
+  <div class="sec-header">
+    <div class="sec-num">10 — Requisitos Não-Funcionais</div>
+    <div class="sec-title">Pilares da Arquitetura</div>
+  </div>
+
+  <div class="pillar-grid">
+    <div class="pillar">
+      <div class="pillar-icon">⚡</div>
+      <div class="pillar-title">Performance</div>
+      <div class="pillar-items">
+        <div class="pillar-item">Connection pooling no PostgreSQL</div>
+        <div class="pillar-item">Redis cache para queries frequentes</div>
+        <div class="pillar-item">CloudFront CDN para entrega de vídeos</div>
+        <div class="pillar-item">Signed URLs — streaming direto S3→client</div>
+        <div class="pillar-item">Amplify Edge CDN para o admin</div>
+        <div class="pillar-item">Alpine-based containers (imagem mínima)</div>
+        <div class="pillar-item">Compressão gzip via Traefik</div>
+        <div class="pillar-item">httpOnly cookies (sem roundtrip de auth)</div>
+      </div>
+    </div>
+    <div class="pillar">
+      <div class="pillar-icon">🔒</div>
+      <div class="pillar-title">Segurança</div>
+      <div class="pillar-items">
+        <div class="pillar-item">Cloudflare DDoS + WAF na borda</div>
+        <div class="pillar-item">Authify — auth delegado, httpOnly cookies</div>
+        <div class="pillar-item">XSS-safe por design (BFF pattern)</div>
+        <div class="pillar-item">Containers com usuário non-root</div>
+        <div class="pillar-item">DB e Redis sem porta pública</div>
+        <div class="pillar-item">Trivy scan em cada build CI</div>
+        <div class="pillar-item">Rate limiting via Traefik</div>
+        <div class="pillar-item">SSH só com chave ED25519</div>
+      </div>
+    </div>
+    <div class="pillar">
+      <div class="pillar-icon">📈</div>
+      <div class="pillar-title">Escalabilidade</div>
+      <div class="pillar-items">
+        <div class="pillar-item">Multi-tenant por empresa (isolamento)</div>
+        <div class="pillar-item">Docker: escala horizontal via réplicas</div>
+        <div class="pillar-item">AWS S3 cresce ilimitado sem config</div>
+        <div class="pillar-item">CloudFront absorve picos de vídeo</div>
+        <div class="pillar-item">Stateless API (horizontal scale ready)</div>
+        <div class="pillar-item">Redis por projeto (sem contenção)</div>
+        <div class="pillar-item">Hetzner: upgrade de plano sem migrar</div>
+        <div class="pillar-item">Caminho claro: Swarm → k3s → K8s</div>
+      </div>
+    </div>
+    <div class="pillar">
+      <div class="pillar-icon">🔧</div>
+      <div class="pillar-title">Manutenibilidade</div>
+      <div class="pillar-items">
+        <div class="pillar-item">100% TypeScript (backend + 2 frontends)</div>
+        <div class="pillar-item">CI/CD automático — zero deploy manual</div>
+        <div class="pillar-item">Migrations versionadas no Git</div>
+        <div class="pillar-item">Swagger auto-gerado (OpenAPI 3.0)</div>
+        <div class="pillar-item">Módulos NestJS desacoplados</div>
+        <div class="pillar-item">Grafana + Loki — logs sem SSH</div>
+        <div class="pillar-item">Rollback em segundos via Coolify</div>
+        <div class="pillar-item">Backup testado mensalmente</div>
+      </div>
+    </div>
+  </div>
+
+</section>
+</div>
+
+<!-- ── 11 · STACK ── -->
+<div class="wrap">
+<section class="sec">
+  <div class="sec-header">
+    <div class="sec-num">11 — Stack Completo</div>
+    <div class="sec-title">Referência Tecnológica</div>
+  </div>
+
+  <table class="btable">
+    <thead>
+      <tr><th style="width:180px;">Camada</th><th style="width:260px;">Tecnologia</th><th>Justificativa</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="row-title">App Mobile</span></td>
+        <td><div class="chips"><span class="chip-sm hi">React 19</span><span class="chip-sm hi">Vite</span><span class="chip-sm">TypeScript</span></div></td>
+        <td style="font-size:12px; color:var(--t2);">Repositório independente. Web app responsivo para funcionários. Deploy separado do admin.</td>
+      </tr>
+      <tr>
+        <td><span class="row-title">Web Admin</span></td>
+        <td><div class="chips"><span class="chip-sm hi">React 19</span><span class="chip-sm hi">AWS Amplify</span><span class="chip-sm">Vite</span><span class="chip-sm">Custom DS</span></div></td>
+        <td style="font-size:12px; color:var(--t2);">Repositório independente. Amplify provê CI/CD + Edge CDN global zero-config.</td>
+      </tr>
+      <tr>
+        <td><span class="row-title">Backend</span></td>
+        <td><div class="chips"><span class="chip-sm hi">NestJS 11</span><span class="chip-sm hi">TypeScript</span><span class="chip-sm">TypeORM</span><span class="chip-sm">Node.js 22</span></div></td>
+        <td style="font-size:12px; color:var(--t2);">Framework modular com DI nativa. Template Ohanax entrega módulos base prontos.</td>
+      </tr>
+      <tr>
+        <td><span class="row-title">Autenticação</span></td>
+        <td><div class="chips"><span class="chip-sm hi">Authify</span><span class="chip-sm hi">BFF pattern</span><span class="chip-sm">httpOnly cookies</span></div></td>
+        <td style="font-size:12px; color:var(--t2);">Serviço Ohanax. OAuth 2.0 delegado, tokens nunca expostos ao frontend — XSS-safe.</td>
+      </tr>
+      <tr>
+        <td><span class="row-title">Billing</span></td>
+        <td><div class="chips"><span class="chip-sm hi">Billify</span><span class="chip-sm">Stripe</span><span class="chip-sm">PIX</span></div></td>
+        <td style="font-size:12px; color:var(--t2);">Serviço Ohanax. Cobrança recorrente de planos por empresa. Módulo incluso no template.</td>
+      </tr>
+      <tr>
+        <td><span class="row-title">Banco de Dados</span></td>
+        <td><div class="chips"><span class="chip-sm hi">PostgreSQL 17</span><span class="chip-sm">TypeORM Migrations</span></div></td>
+        <td style="font-size:12px; color:var(--t2);">Dados de negócio. ACID compliant, relacional, multi-tenant. Migrations no Git.</td>
+      </tr>
+      <tr>
+        <td><span class="row-title">Logs / Analytics</span></td>
+        <td><div class="chips"><span class="chip-sm hi">MongoDB 7</span><span class="chip-sm">Mongoose</span></div></td>
+        <td style="font-size:12px; color:var(--t2);">Banco dedicado para analytics_events e audit_logs. Alto volume, sem impactar PostgreSQL.</td>
+      </tr>
+      <tr>
+        <td><span class="row-title">Cache</span></td>
+        <td><div class="chips"><span class="chip-sm hi">Redis 7</span></div></td>
+        <td style="font-size:12px; color:var(--t2);">Cache de queries frequentes e sessões. Container dedicado por projeto.</td>
+      </tr>
+      <tr>
+        <td><span class="row-title">Storage</span></td>
+        <td><div class="chips"><span class="chip-sm hi">AWS S3</span><span class="chip-sm hi">CloudFront</span><span class="chip-sm">Signed URLs</span></div></td>
+        <td style="font-size:12px; color:var(--t2);">Bucket privado AWS. CDN entrega vídeos do edge mais próximo. Signed URLs com TTL.</td>
+      </tr>
+      <tr>
+        <td><span class="row-title">VPS</span></td>
+        <td><div class="chips"><span class="chip-sm hi">Hetzner CPX31</span><span class="chip-sm">Ubuntu 24.04</span></div></td>
+        <td style="font-size:12px; color:var(--t2);">~€15/mês vs $80+ AWS. Alta performance, bom custo para produção self-hosted.</td>
+      </tr>
+      <tr>
+        <td><span class="row-title">Orquestrador</span></td>
+        <td><div class="chips"><span class="chip-sm hi">Coolify v4</span><span class="chip-sm hi">Traefik v3</span></div></td>
+        <td style="font-size:12px; color:var(--t2);">Coolify: PaaS self-hosted. Traefik: reverse proxy com SSL automático e roteamento por hostname.</td>
+      </tr>
+      <tr>
+        <td><span class="row-title">Containers</span></td>
+        <td><div class="chips"><span class="chip-sm hi">Docker</span><span class="chip-sm">Docker Compose</span></div></td>
+        <td style="font-size:12px; color:var(--t2);">Isolamento de serviços, rede interna para DB/Redis, resource limits.</td>
+      </tr>
+      <tr>
+        <td><span class="row-title">CI/CD</span></td>
+        <td><div class="chips"><span class="chip-sm hi">GitHub Actions</span><span class="chip-sm">Coolify Auto-Deploy</span><span class="chip-sm">Amplify CI</span></div></td>
+        <td style="font-size:12px; color:var(--t2);">Backend: GitHub Actions (CI) + Coolify auto-deploy via GitHub App (build no servidor, sem registry). Frontend: Amplify CI.</td>
+      </tr>
+      <tr>
+        <td><span class="row-title">DNS / Edge</span></td>
+        <td><div class="chips"><span class="chip-sm hi">Cloudflare</span></div></td>
+        <td style="font-size:12px; color:var(--t2);">DDoS protection, WAF, e IP do servidor oculto. Plano free cobre o necessário.</td>
+      </tr>
+      <tr>
+        <td><span class="row-title">Observabilidade</span></td>
+        <td><div class="chips"><span class="chip-sm hi">Grafana</span><span class="chip-sm hi">Prometheus</span><span class="chip-sm">Loki</span><span class="chip-sm">Uptime Kuma</span></div></td>
+        <td style="font-size:12px; color:var(--t2);">Grafana centraliza métricas, logs e alertas. Uptime Kuma para status page pública.</td>
+      </tr>
+      <tr>
+        <td><span class="row-title">Segurança OS</span></td>
+        <td><div class="chips"><span class="chip-sm">UFW</span><span class="chip-sm">Fail2Ban</span><span class="chip-sm">Trivy</span><span class="chip-sm">unattended-upgrades</span></div></td>
+        <td style="font-size:12px; color:var(--t2);">Firewall, brute-force protection, CVE scanning e patches de OS automáticos.</td>
+      </tr>
+    </tbody>
+  </table>
+
+</section>
+</div>
+
+<footer>
+  <div>
+    <div class="footer-brand">infra<em>Blueprint</em> — Arquitetura do Sistema</div>
+    <div class="footer-note" style="margin-top:4px;">Documento confidencial · Versão 1.0 · 2025</div>
+  </div>
+  <div class="footer-note" style="text-align:center;">
+    Arquitetura desenvolvida sobre infraestrutura<br>
+    <strong style="color:var(--t2);">ohanax</strong> — template reutilizável
+  </div>
+  <div style="text-align:right;">
+    <div class="footer-brand">ohana<em>X</em></div>
+    <div class="footer-note" style="margin-top:4px;">Template & Infraestrutura</div>
+  </div>
+</footer>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    flowchart: { curve: 'basis', padding: 28, htmlLabels: true, nodeSpacing: 40, rankSpacing: 60, useMaxWidth: false },
+    themeVariables: {
+      darkMode: true,
+      background: '#0d0d0d',
+      primaryColor: '#1a1a1a',
+      primaryBorderColor: '#333',
+      primaryTextColor: '#e0e0e0',
+      secondaryColor: '#111',
+      tertiaryColor: '#0d0d0d',
+      lineColor: '#555',
+      fontSize: '18px',
+      fontFamily: 'Inter, sans-serif',
+    },
+  });
+</script>
+
+<script>
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.opacity = '1';
+      e.target.style.transform = 'translateY(0)';
+      io.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.06 });
+
+document.querySelectorAll('.dcard, .mon-card, .pillar, .sec-item, .full-block, .info-box').forEach((el, i) => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(14px)';
+  el.style.transition = `opacity 0.55s ease ${(i % 8) * 0.05}s, transform 0.55s ease ${(i % 8) * 0.05}s`;
+  io.observe(el);
+});
+</script>
+</body>
+</html>
